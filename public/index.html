@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>10xThink — AI Career Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cabinet+Grotesk:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────── */
+:root {
+  --bg: #080810;
+  --bg2: #0e0e1c;
+  --bg3: #141428;
+  --bg4: #1a1a34;
+  --surface: rgba(255,255,255,.04);
+  --surface2: rgba(255,255,255,.07);
+  --border: rgba(255,255,255,.06);
+  --border2: rgba(255,255,255,.12);
+  --text: #f0f0ff;
+  --muted: #6b6b9a;
+  --dim: #33334a;
+  --accent: #5b4cf5;
+  --accent2: #7c6dff;
+  --accent3: #a89bff;
+  --neon: #4fffb0;
+  --neon2: #00e5ff;
+  --warm: #ff9f5a;
+  --pink: #ff5896;
+  --gold: #ffd166;
+  --red: #ff5252;
+  --grad: linear-gradient(135deg,#5b4cf5,#4fffb0);
+  --grad2: linear-gradient(135deg,#5b4cf5,#7c6dff 50%,#4fffb0);
+  --sidebar: 230px;
+  --r: 6px;
+  --r2: 12px;
+  --r3: 18px;
+  --r4: 26px;
+  --t: .2s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="light"] {
+  --bg: #f4f4ff;
+  --bg2: #ffffff;
+  --bg3: #f0f0fc;
+  --bg4: #e8e8f8;
+  --surface: rgba(0,0,0,.03);
+  --surface2: rgba(0,0,0,.06);
+  --border: rgba(0,0,0,.06);
+  --border2: rgba(0,0,0,.12);
+  --text: #0a0a18;
+  --muted: #5a5a88;
+  --dim: #b0b0cc;
+}
+
+/* ─── RESET ──────────────────────────────────────────────── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:'Cabinet Grotesk',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh;transition:background .35s,color .35s;line-height:1.6;cursor:none}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+::selection{background:rgba(91,76,245,.3);color:var(--text)}
+a{text-decoration:none;color:inherit}
+button{font-family:'Cabinet Grotesk',sans-serif;cursor:none}
+img{max-width:100%;display:block}
+
+/* ─── CURSOR ─────────────────────────────────────────────── */
+#cursor{position:fixed;width:10px;height:10px;background:var(--neon);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .08s,width .2s,height .2s,background .2s;mix-blend-mode:difference}
+#cursor-ring{position:fixed;width:36px;height:36px;border:1.5px solid rgba(79,255,176,.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform .18s ease,width .25s,height .25s,opacity .2s}
+#cursor.hovering{width:6px;height:6px}
+#cursor-ring.hovering{width:56px;height:56px;border-color:rgba(79,255,176,.15)}
+#cursor.clicking{transform:translate(-50%,-50%) scale(.7)}
+
+/* ─── NOISE OVERLAY ──────────────────────────────────────── */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:.025;pointer-events:none;z-index:9990}
+
+/* ─── SHELL ──────────────────────────────────────────────── */
+.shell{display:flex;min-height:100vh}
+.main{margin-left:var(--sidebar);flex:1;min-width:0;display:flex;flex-direction:column}
+
+/* ─── SIDEBAR ────────────────────────────────────────────── */
+.sidebar{
+  width:var(--sidebar);min-height:100vh;
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;
+  z-index:200;overflow-y:auto;
+  padding-bottom:1.5rem;
+  transition:transform .3s cubic-bezier(.4,0,.2,1),background .35s;
+}
+.sidebar-logo{
+  padding:1.4rem 1.3rem 1rem;
+  border-bottom:1px solid var(--border);
+  margin-bottom:.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo-text{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.7rem;letter-spacing:.04em;
+  background:var(--grad);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  cursor:none;line-height:1;
+}
+.logo-sub{font-size:.6rem;color:var(--muted);margin-top:3px;letter-spacing:.08em;text-transform:uppercase}
+.theme-btn{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--surface2);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;transition:var(--t);flex-shrink:0;color:var(--text);
+}
+.theme-btn:hover{transform:rotate(20deg);border-color:var(--accent2)}
+.nav-sect{
+  padding:.4rem 1.2rem .2rem;
+  font-size:.55rem;font-weight:700;color:var(--dim);
+  text-transform:uppercase;letter-spacing:.15em;margin-top:.4rem;
+  font-family:'JetBrains Mono',monospace;
+}
+.nav-item{
+  display:flex;align-items:center;gap:.65rem;
+  padding:.5rem .9rem .5rem 1.2rem;
+  border:none;background:none;width:100%;text-align:left;
+  font-family:'Cabinet Grotesk',sans-serif;font-size:.82rem;font-weight:500;
+  color:var(--muted);transition:var(--t);position:relative;overflow:hidden;
+}
+.nav-item::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:0;
+  background:linear-gradient(90deg,rgba(91,76,245,.12),transparent);
+  transition:width .25s;
+}
+.nav-item:hover::before,.nav-item.active::before{width:100%}
+.nav-item:hover{color:var(--text)}
+.nav-item.active{color:var(--accent3)}
+.nav-item.active .nav-line{opacity:1;transform:scaleY(1)}
+.nav-line{
+  position:absolute;left:0;top:18%;bottom:18%;width:2px;
+  background:var(--grad);border-radius:0 2px 2px 0;
+  opacity:0;transform:scaleY(0);transform-origin:center;
+  transition:.25s cubic-bezier(.4,0,.2,1);
+}
+.nav-icon{font-size:.88rem;width:18px;text-align:center;flex-shrink:0}
+.nav-badge{
+  margin-left:auto;background:var(--neon);color:#000;
+  font-size:.52rem;padding:2px 6px;border-radius:100px;
+  font-weight:800;letter-spacing:.03em;animation:badgePulse 2s infinite;
+}
+@keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(79,255,176,.4)}50%{box-shadow:0 0 0 5px rgba(79,255,176,0)}}
+.sidebar-foot{margin-top:auto;padding:.8rem 1.2rem 0;border-top:1px solid var(--border)}
+.ai-pill{
+  display:flex;align-items:center;gap:.55rem;padding:.6rem .9rem;
+  background:rgba(91,76,245,.08);border:1px solid rgba(91,76,245,.2);
+  border-radius:var(--r2);transition:var(--t);
+}
+.ai-pill:hover{background:rgba(91,76,245,.15);border-color:rgba(91,76,245,.4)}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--neon);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 0 0 rgba(79,255,176,.5)}50%{opacity:.5;transform:scale(.7);box-shadow:0 0 0 6px rgba(79,255,176,0)}}
+.ai-pill-text{font-size:.72rem;font-weight:700;color:var(--accent3);letter-spacing:.02em}
+
+/* ─── TOPBAR ─────────────────────────────────────────────── */
+.topbar{
+  height:52px;background:rgba(8,8,16,.85);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 1.5rem;gap:.8rem;
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  transition:background .35s;
+}
+.topbar-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.1rem;font-weight:400;flex:1;letter-spacing:.06em;color:var(--text);
+}
+.page-content{flex:1;padding:2rem 2rem;max-width:1400px}
+.page{display:none;animation:pageIn .3s cubic-bezier(.4,0,.2,1)}
+.page.active{display:block}
+@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── SHARED ─────────────────────────────────────────────── */
+.chip{display:inline-flex;align-items:center;padding:.2rem .6rem;border-radius:100px;font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.chip-v{background:rgba(91,76,245,.14);border:1px solid rgba(91,76,245,.3);color:var(--accent3)}
+.chip-neon{background:rgba(79,255,176,.1);border:1px solid rgba(79,255,176,.28);color:var(--neon)}
+.chip-gold{background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.28);color:var(--gold)}
+.chip-cyan{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.28);color:var(--neon2)}
+.chip-red{background:rgba(255,82,82,.1);border:1px solid rgba(255,82,82,.28);color:var(--red)}
+.chip-warm{background:rgba(255,159,90,.1);border:1px solid rgba(255,159,90,.28);color:var(--warm)}
+.chip-pink{background:rgba(255,88,150,.1);border:1px solid rgba(255,88,150,.28);color:var(--pink)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.45rem;
+  padding:.65rem 1.35rem;border-radius:var(--r2);
+  font-family:'Cabinet Grotesk',sans-serif;font-size:.82rem;font-weight:700;
+  cursor:none;transition:var(--t);border:none;white-space:nowrap;letter-spacing:.02em;
+}
+.btn-primary{
+  background:var(--grad);color:#000;
+  box-shadow:0 0 20px rgba(79,255,176,.15);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 35px rgba(79,255,176,.3)}
+.btn-ghost{
+  background:transparent;color:var(--text);
+  border:1px solid var(--border2);
+}
+.btn-ghost:hover{border-color:var(--accent2);color:var(--accent3);background:rgba(91,76,245,.06)}
+.btn-sm{padding:.38rem .85rem;font-size:.75rem;border-radius:var(--r)}
+.btn-xs{padding:.22rem .55rem;font-size:.68rem;border-radius:6px}
+.btn-block{width:100%}
+.card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r3);padding:1.3rem 1.5rem;
+  transition:background .35s,border-color .2s;
+}
+.card-sm{padding:.9rem 1.1rem;border-radius:var(--r2)}
+.label{
+  display:block;font-size:.62rem;font-weight:700;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.38rem;
+  font-family:'JetBrains Mono',monospace;
+}
+input[type="text"],input[type="date"],input[type="file"],select,textarea{
+  width:100%;padding:.62rem .9rem;
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:var(--r2);color:var(--text);
+  font-family:'Cabinet Grotesk',sans-serif;font-size:.82rem;
+  outline:none;transition:var(--t);
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--accent2);background:var(--bg4);
+  box-shadow:0 0 0 3px rgba(91,76,245,.12);
+}
+select option{background:var(--bg3);color:var(--text)}
+textarea{resize:vertical;line-height:1.6}
+input::placeholder,textarea::placeholder{color:var(--dim)}
+.prog{height:2px;background:var(--border2);border-radius:100px;overflow:hidden}
+.prog-fill{height:100%;background:var(--grad);border-radius:100px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;gap:.8rem;padding:1.3rem;color:var(--muted);font-size:.8rem}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px;text-align:center;gap:.5rem;color:var(--muted);font-size:.82rem}
+.empty-icon{font-size:2.8rem;opacity:.25;margin-bottom:.2rem}
+.filter-bar{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:1rem}
+.filter-btn{
+  padding:.28rem .78rem;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:100px;font-size:.7rem;color:var(--muted);
+  cursor:none;transition:var(--t);
+  font-family:'Cabinet Grotesk',sans-serif;font-weight:600;
+}
+.filter-btn:hover,.filter-btn.active{
+  border-color:var(--accent2);color:var(--accent3);
+  background:rgba(91,76,245,.1);
+}
+.form-col{display:flex;flex-direction:column;gap:.85rem}
+.hidden{display:none!important}
+.flex-row{display:flex;align-items:center;gap:.65rem}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+.flex-wrap{flex-wrap:wrap}
+.text-muted{color:var(--muted)}.text-sm{font-size:.78rem}.text-xs{font-size:.68rem}
+.text-v{color:var(--accent3)}.text-neon{color:var(--neon)}.text-gold{color:var(--gold)}
+.mt-xs{margin-top:.3rem}.mt-sm{margin-top:.55rem}.mt-md{margin-top:.9rem}
+.mb-xs{margin-bottom:.3rem}.mb-sm{margin-bottom:.5rem}.mb-md{margin-bottom:.9rem}
+.gap-sm{gap:.45rem}
+.divider{height:1px;background:var(--border);margin:2rem 0}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.topbar-chip{padding:.16rem .6rem;border-radius:100px;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+
+/* ─── SECTION HEADER ─────────────────────────────────────── */
+.section-head{margin-bottom:1.8rem}
+.section-head h2{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2rem,5vw,3.2rem);font-weight:400;
+  margin-bottom:.3rem;line-height:1.05;letter-spacing:.04em;
+  background:var(--grad2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.section-head p{font-size:.86rem;color:var(--muted);line-height:1.65;max-width:520px}
+.page-tag{display:inline-block;margin-bottom:.5rem}
+
+/* ─── HOME PAGE ──────────────────────────────────────────── */
+.hero{
+  position:relative;overflow:hidden;
+  border:1px solid var(--border2);border-radius:var(--r4);
+  padding:3rem 2.5rem 3rem;margin-bottom:1.8rem;
+  background:var(--bg2);
+}
+.hero-bg-grid{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(91,76,245,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(91,76,245,.06) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,#000 40%,transparent 100%);
+}
+.hero-orb{
+  position:absolute;pointer-events:none;border-radius:50%;filter:blur(80px);
+}
+.hero-orb-1{width:380px;height:380px;background:rgba(91,76,245,.18);top:-80px;right:-80px;animation:orbFloat 8s ease-in-out infinite}
+.hero-orb-2{width:260px;height:260px;background:rgba(79,255,176,.1);bottom:-60px;left:30%;animation:orbFloat 10s ease-in-out infinite reverse}
+@keyframes orbFloat{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.22rem .9rem;
+  background:rgba(79,255,176,.08);border:1px solid rgba(79,255,176,.2);
+  border-radius:100px;font-size:.7rem;font-weight:700;color:var(--neon);
+  margin-bottom:1.1rem;letter-spacing:.05em;text-transform:uppercase;
+}
+.hero-eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--neon);animation:pulse 2s infinite}
+.hero h1{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3rem,8vw,6.5rem);
+  font-weight:400;line-height:.95;
+  margin-bottom:1rem;letter-spacing:.03em;
+  color:var(--text);
+}
+.hero h1 .stroke{
+  -webkit-text-stroke:1px var(--accent2);
+  -webkit-text-fill-color:transparent;
+  color:transparent;
+}
+.hero h1 .glow{
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(79,255,176,.3));
+}
+.hero p{font-size:.9rem;color:var(--muted);max-width:460px;line-height:1.75;margin-bottom:1.5rem;font-weight:400}
+.hero-btns{display:flex;gap:.6rem;flex-wrap:wrap}
+.hero-ticker{
+  position:absolute;bottom:0;left:0;right:0;overflow:hidden;
+  height:36px;border-top:1px solid var(--border);
+  background:rgba(8,8,16,.6);backdrop-filter:blur(10px);
+  display:flex;align-items:center;
+}
+.ticker-track{
+  display:flex;gap:2.5rem;white-space:nowrap;
+  animation:ticker 30s linear infinite;
+  font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--dim);
+  padding:0 1.5rem;
+}
+.ticker-track span{color:var(--neon2)}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.8rem}
+.stat-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);
+  padding:1rem 1.2rem;
+  transition:var(--t);position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(91,76,245,.05),transparent);
+  opacity:0;transition:.3s;
+}
+.stat-card:hover::before{opacity:1}
+.stat-card:hover{border-color:rgba(91,76,245,.3);transform:translateY(-2px)}
+.stat-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2rem;font-weight:400;color:var(--accent3);letter-spacing:.04em;line-height:1;
+}
+.stat-label{font-size:.7rem;color:var(--muted);margin-top:3px;font-weight:600}
+
+/* FEATURE GRID */
+.feat-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:var(--r3);overflow:hidden;
+}
+.feat-card{
+  background:var(--bg2);padding:1.4rem;cursor:none;
+  transition:background .2s;position:relative;overflow:hidden;
+}
+.feat-card::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(91,76,245,.06),rgba(79,255,176,.03));
+  opacity:0;transition:.25s;
+}
+.feat-card:hover{background:var(--bg3)}
+.feat-card:hover::after{opacity:1}
+.feat-icon{
+  font-size:1.5rem;margin-bottom:.6rem;display:block;
+  transition:.3s;
+}
+.feat-card:hover .feat-icon{transform:scale(1.1) rotate(-5deg)}
+.feat-title{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.04em;margin-bottom:.3rem;color:var(--text)}
+.feat-desc{font-size:.74rem;color:var(--muted);line-height:1.55}
+.feat-arrow{
+  position:absolute;bottom:1rem;right:1rem;
+  opacity:0;transform:translate(-4px,4px);transition:.25s;
+  color:var(--neon);font-size:.8rem;
+}
+.feat-card:hover .feat-arrow{opacity:1;transform:translate(0,0)}
+
+/* ─── ROADMAP ────────────────────────────────────────────── */
+.roadmap-shell{display:grid;grid-template-columns:290px 1fr;gap:1.5rem;align-items:start}
+.form-panel{position:sticky;top:64px}
+.autocomplete-wrap{position:relative}
+.autocomplete-list{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:50;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--r2);box-shadow:0 20px 60px rgba(0,0,0,.6);overflow:hidden;
+}
+.ac-item{padding:.55rem .9rem;font-size:.8rem;cursor:none;transition:background .12s;color:var(--text)}
+.ac-item:hover{background:var(--bg4);color:var(--accent3)}
+.warn-bar{
+  padding:.65rem .95rem;
+  background:rgba(255,88,150,.07);border:1px solid rgba(255,88,150,.2);
+  border-radius:var(--r);font-size:.76rem;margin-bottom:.9rem;color:var(--pink);
+}
+.step-list{display:flex;flex-direction:column}
+.step-row{
+  display:flex;gap:.9rem;padding:.9rem 0;
+  border-bottom:1px solid var(--border);
+  animation:stepIn .3s ease both;
+}
+@keyframes stepIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.step-row:last-child{border-bottom:none}
+.step-row.done{opacity:.35}
+.step-num{
+  width:24px;height:24px;border-radius:50%;flex-shrink:0;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.62rem;font-weight:700;cursor:none;
+  background:rgba(91,76,245,.12);border:1.5px solid rgba(91,76,245,.35);
+  color:var(--accent3);transition:var(--t);user-select:none;
+  font-family:'JetBrains Mono',monospace;
+}
+.step-num:hover{background:rgba(91,76,245,.25);transform:scale(1.1)}
+.step-num.done{background:rgba(79,255,176,.12);border-color:rgba(79,255,176,.4);color:var(--neon)}
+.step-body{flex:1;min-width:0}
+.step-title{font-weight:700;font-size:.85rem;margin-bottom:.18rem;line-height:1.4}
+.step-title.done{text-decoration:line-through;color:var(--muted)}
+.step-desc{font-size:.77rem;color:var(--muted);line-height:1.6;margin-bottom:.35rem}
+.step-chips{display:flex;flex-wrap:wrap;gap:.22rem;margin-bottom:.28rem}
+.step-meta{font-size:.68rem;color:var(--dim);display:flex;flex-wrap:wrap;gap:.55rem;align-items:center}
+.step-video-link{font-size:.68rem;color:var(--neon2);display:inline-flex;align-items:center;gap:.28rem;transition:var(--t)}
+.step-video-link:hover{text-decoration:underline}
+.step-project-tag{
+  font-size:.64rem;padding:.12rem .48rem;border-radius:5px;
+  background:rgba(255,88,150,.1);border:1px solid rgba(255,88,150,.25);color:var(--pink);
+}
+
+/* ─── STUDENT ────────────────────────────────────────────── */
+.student-shell{display:grid;grid-template-columns:260px 1fr;gap:1.5rem;align-items:start}
+.stream-btn{
+  width:100%;display:flex;align-items:center;gap:.75rem;
+  padding:.8rem 1rem;background:var(--bg3);
+  border:1.5px solid var(--border2);border-radius:var(--r2);
+  cursor:none;transition:var(--t);text-align:left;
+  font-family:'Cabinet Grotesk',sans-serif;margin-bottom:.5rem;
+}
+.stream-btn:hover{border-color:var(--accent2);background:var(--bg4);transform:translateX(3px)}
+.stream-btn.selected{border-color:var(--accent);background:rgba(91,76,245,.1)}
+.stream-emoji{font-size:1.15rem;width:24px;text-align:center;flex-shrink:0}
+.stream-name{font-weight:800;font-size:.84rem;color:var(--text)}
+.stream-sub{font-size:.68rem;color:var(--muted);margin-top:.1rem}
+.quiz-q{font-weight:700;font-size:.95rem;margin-bottom:.2rem;line-height:1.45;color:var(--text)}
+.quiz-opt{
+  width:100%;padding:.65rem .92rem;
+  background:var(--bg3);border:1.5px solid var(--border2);
+  border-radius:var(--r2);font-family:'Cabinet Grotesk',sans-serif;
+  font-size:.8rem;color:var(--text);cursor:none;text-align:left;
+  transition:var(--t);display:block;margin-bottom:.4rem;font-weight:500;
+}
+.quiz-opt:hover{border-color:var(--accent2);background:rgba(91,76,245,.08);color:var(--accent3);transform:translateX(4px)}
+.subject-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:1.1rem;margin-bottom:.8rem}
+.subject-card h4{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.04em;margin-bottom:.6rem;display:flex;align-items:center;gap:.45rem}
+.chapter-row{display:flex;align-items:center;justify-content:space-between;padding:.32rem 0;border-bottom:1px solid var(--border);font-size:.77rem}
+.chapter-row:last-child{border-bottom:none}
+.chapter-priority{font-size:.6rem;padding:.12rem .42rem;border-radius:5px;font-weight:700}
+.prio-high{background:rgba(255,82,82,.14);color:var(--red)}
+.prio-med{background:rgba(255,209,102,.14);color:var(--gold)}
+.prio-low{background:rgba(79,255,176,.14);color:var(--neon)}
+
+/* ─── EXAM PLANNER ───────────────────────────────────────── */
+.planner-shell{display:grid;grid-template-columns:290px 1fr;gap:1.5rem;align-items:start}
+.week-block{margin-bottom:.9rem}
+.week-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
+.week-title{font-weight:700;font-size:.84rem}
+.intensity-badge{padding:.15rem .58rem;border-radius:100px;font-size:.62rem;font-weight:700}
+.day-table{width:100%;border-collapse:collapse;font-size:.74rem}
+.day-table td{padding:.36rem .5rem;border-bottom:1px solid var(--border);vertical-align:top}
+.day-table td:first-child{color:var(--muted);font-weight:600;width:72px;white-space:nowrap}
+.day-table tr:last-child td{border-bottom:none}
+.verdict-bar{
+  padding:.85rem 1rem;
+  background:rgba(91,76,245,.07);border-left:3px solid var(--accent);
+  border-radius:0 var(--r) var(--r) 0;
+  font-size:.8rem;margin-bottom:.9rem;line-height:1.65;
+}
+
+/* ─── PAPERS ─────────────────────────────────────────────── */
+.papers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.85rem}
+.paper-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r2);padding:1.1rem;cursor:none;
+  transition:var(--t);position:relative;overflow:hidden;
+}
+.paper-card::before{content:'';position:absolute;inset:0;background:var(--grad);opacity:0;transition:.3s}
+.paper-card:hover::before{opacity:.04}
+.paper-card:hover{border-color:rgba(91,76,245,.4);transform:translateY(-2px);box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.paper-year{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.04em;color:var(--accent3)}
+.paper-exam{font-size:.78rem;font-weight:700;margin-bottom:.28rem}
+.paper-meta{font-size:.68rem;color:var(--muted)}
+.paper-actions{display:flex;gap:.3rem;margin-top:.7rem;flex-wrap:wrap}
+.paper-modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.85);
+  z-index:600;display:flex;align-items:center;justify-content:center;padding:1rem;
+  backdrop-filter:blur(8px);
+}
+.paper-modal{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--r4);width:100%;max-width:780px;
+  max-height:90vh;overflow-y:auto;
+  box-shadow:0 40px 120px rgba(0,0,0,.7);
+}
+.paper-modal-head{
+  padding:1.2rem 1.4rem .9rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;
+  position:sticky;top:0;background:var(--bg2);z-index:1;
+}
+.paper-modal-head h3{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em}
+.modal-close{
+  width:26px;height:26px;border-radius:var(--r);
+  background:var(--bg4);border:none;cursor:none;
+  color:var(--muted);font-size:.9rem;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:var(--t);
+}
+.modal-close:hover{background:rgba(255,82,82,.15);color:var(--red)}
+.paper-modal-body{padding:1.2rem 1.4rem}
+.qp-preview{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);padding:1.1rem;
+  font-family:'JetBrains Mono',monospace;font-size:.73rem;line-height:1.8;
+  color:var(--text);margin-bottom:1rem;white-space:pre-wrap;
+  max-height:360px;overflow-y:auto;
+}
+.download-links{display:flex;gap:.45rem;flex-wrap:wrap}
+
+/* ─── PROJECT HUB ────────────────────────────────────────── */
+
+/* SOTD Hero */
+.sotd-hero{
+  display:grid;grid-template-columns:1fr 1.6fr;
+  border:1px solid rgba(79,255,176,.15);border-radius:var(--r4);
+  overflow:hidden;margin-bottom:1.2rem;position:relative;
+  background:var(--bg2);min-height:300px;
+}
+.sotd-left{
+  padding:2rem 2rem;display:flex;flex-direction:column;
+  justify-content:center;position:relative;z-index:1;
+  background:linear-gradient(135deg,rgba(91,76,245,.06),transparent);
+}
+.sotd-badge{
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.22rem .8rem;background:rgba(79,255,176,.12);
+  border:1px solid rgba(79,255,176,.35);border-radius:100px;
+  font-size:.62rem;font-weight:800;color:var(--neon);
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:.9rem;
+  font-family:'JetBrains Mono',monospace;
+}
+.sotd-name{
+  font-family:'Bebas Neue',sans-serif;font-size:2.8rem;
+  letter-spacing:.03em;line-height:1;margin-bottom:.35rem;color:var(--text);
+}
+.sotd-cat{font-size:.8rem;color:var(--muted);margin-bottom:.9rem}
+.sotd-why{
+  font-size:.79rem;color:var(--accent3);font-style:italic;
+  margin-bottom:1.1rem;line-height:1.6;max-width:360px;
+  padding:.55rem .8rem;
+  background:rgba(91,76,245,.08);
+  border-left:2px solid var(--accent);
+  border-radius:0 var(--r) var(--r) 0;
+}
+.sotd-scores{display:flex;gap:.55rem;flex-wrap:wrap;margin-bottom:1.1rem}
+.score-pill{
+  display:flex;flex-direction:column;align-items:center;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--r2);padding:.4rem .75rem;min-width:65px;transition:var(--t);
+}
+.score-pill:hover{border-color:var(--neon)}
+.score-num{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--neon);line-height:1;letter-spacing:.04em}
+.score-lbl{font-size:.56rem;color:var(--muted);margin-top:2px;letter-spacing:.06em;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.sotd-right{position:relative;overflow:hidden;min-height:300px}
+.sotd-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .7s ease}
+.sotd-hero:hover .sotd-img{transform:scale(1.05)}
+.sotd-img-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(14,14,28,.7) 0%,transparent 45%)}
+.sotd-ribbon{
+  position:absolute;top:1.2rem;right:1.2rem;
+  background:rgba(79,255,176,.9);color:#000;
+  font-size:.62rem;font-weight:800;padding:.3rem .9rem;
+  border-radius:100px;text-transform:uppercase;letter-spacing:.1em;
+  backdrop-filter:blur(6px);font-family:'JetBrains Mono',monospace;
+}
+
+/* SOTM bar */
+.sotm-bar{
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  background:linear-gradient(135deg,rgba(255,209,102,.06),rgba(255,88,150,.04));
+  border:1px solid rgba(255,209,102,.18);border-radius:var(--r3);
+  padding:.9rem 1.3rem;margin-bottom:1.5rem;
+}
+.sotm-crown{font-size:1.2rem;flex-shrink:0}
+.sotm-info{flex:1;min-width:0}
+.sotm-label{font-size:.58rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.12em;font-family:'JetBrains Mono',monospace}
+.sotm-name{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.04em;color:var(--text)}
+.sotm-tags{display:flex;gap:.3rem;flex-wrap:wrap;flex:1}
+
+/* Gallery */
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1.1rem}
+.proj-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r3);overflow:hidden;cursor:none;
+  transition:var(--t);position:relative;
+}
+.proj-card:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.proj-thumb-wrap{height:165px;overflow:hidden;position:relative;background:var(--bg4)}
+.proj-thumb{width:100%;height:100%;object-fit:cover;display:block;transition:transform .55s ease}
+.proj-card:hover .proj-thumb{transform:scale(1.07)}
+.proj-thumb-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.8rem;color:var(--dim)}
+.proj-award-badge{
+  position:absolute;top:.65rem;right:.65rem;
+  padding:.18rem .65rem;border-radius:100px;font-size:.6rem;font-weight:700;
+  backdrop-filter:blur(8px);font-family:'JetBrains Mono',monospace;
+}
+.badge-sotd{background:rgba(79,255,176,.15);border:1px solid rgba(79,255,176,.5);color:var(--neon)}
+.badge-sotm{background:rgba(255,209,102,.15);border:1px solid rgba(255,209,102,.5);color:var(--gold)}
+.badge-hm{background:rgba(163,155,255,.15);border:1px solid rgba(163,155,255,.5);color:var(--accent3)}
+.proj-country-flag{position:absolute;bottom:.65rem;left:.65rem;font-size:.75rem;background:rgba(0,0,0,.55);padding:.15rem .4rem;border-radius:5px;backdrop-filter:blur(4px)}
+.proj-body{padding:.9rem 1.05rem 1.05rem}
+.proj-category{font-size:.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.22rem;font-family:'JetBrains Mono',monospace}
+.proj-name{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.04em;margin-bottom:.32rem;color:var(--text)}
+.proj-why{font-size:.72rem;color:var(--muted);line-height:1.48;margin-bottom:.5rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.proj-scores{display:flex;gap:.45rem;margin-bottom:.42rem}
+.proj-score-item{font-size:.63rem;color:var(--dim);display:flex;align-items:center;gap:.22rem}
+.proj-score-val{color:var(--neon);font-weight:700;font-size:.68rem;font-family:'JetBrains Mono',monospace}
+.proj-footer{display:flex;align-items:center;justify-content:space-between}
+.proj-url{font-size:.66rem;color:var(--dim)}
+.proj-tags-row{display:flex;gap:.2rem;flex-wrap:wrap}
+.proj-tag{font-size:.57rem;padding:.1rem .38rem;border-radius:4px;background:rgba(91,76,245,.1);border:1px solid rgba(91,76,245,.2);color:var(--accent3)}
+
+/* ─── PROJECT IDEAS — redesigned ─────────────────────────── */
+.ideas-section-head{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  flex-wrap:wrap;gap:.75rem;margin:2rem 0 1.1rem;
+}
+.ideas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.85rem}
+.idea-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r2);padding:1rem 1.1rem;cursor:none;
+  transition:var(--t);display:flex;flex-direction:column;gap:.4rem;
+  position:relative;overflow:hidden;
+}
+.idea-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(91,76,245,.05),rgba(79,255,176,.03));
+  opacity:0;transition:.25s;
+}
+.idea-card:hover::before{opacity:1}
+.idea-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 10px 35px rgba(0,0,0,.4)}
+.idea-header{display:flex;align-items:center;justify-content:space-between;gap:.4rem}
+.idea-level{font-size:.59rem;font-weight:700;padding:.12rem .48rem;border-radius:100px;font-family:'JetBrains Mono',monospace}
+.level-beginner{background:rgba(79,255,176,.12);color:var(--neon);border:1px solid rgba(79,255,176,.28)}
+.level-intermediate{background:rgba(0,229,255,.12);color:var(--neon2);border:1px solid rgba(0,229,255,.28)}
+.level-advanced{background:rgba(255,88,150,.12);color:var(--pink);border:1px solid rgba(255,88,150,.28)}
+.idea-type{
+  font-size:.57rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.07em;padding:.1rem .38px;background:var(--bg4);border-radius:4px;
+  font-family:'JetBrains Mono',monospace;
+}
+.idea-title{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.04em;line-height:1.2;color:var(--text)}
+.idea-desc{font-size:.73rem;color:var(--muted);line-height:1.52;flex:1}
+.idea-tech{display:flex;gap:.22rem;flex-wrap:wrap;margin-top:.22rem}
+.idea-tech span{font-size:.58rem;padding:.08rem .35rem;border-radius:4px;background:var(--bg4);border:1px solid var(--border);color:var(--muted);font-family:'JetBrains Mono',monospace}
+.idea-started{font-size:.64rem;color:var(--dim);font-family:'JetBrains Mono',monospace}
+.idea-ai-btn{
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.25rem .65rem;border-radius:100px;
+  background:rgba(79,255,176,.08);border:1px solid rgba(79,255,176,.2);
+  color:var(--neon);font-size:.62rem;font-weight:700;cursor:none;
+  transition:var(--t);margin-top:.2rem;width:fit-content;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.03em;
+}
+.idea-ai-btn:hover{background:rgba(79,255,176,.18);border-color:rgba(79,255,176,.4)}
+.idea-category-banner{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2rem;letter-spacing:.06em;
+  color:var(--border2);margin:1.5rem 0 .6rem;
+  display:flex;align-items:center;gap:.8rem;
+}
+.idea-category-banner::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ─── RESUME ─────────────────────────────────────────────── */
+.resume-tabs{
+  display:flex;gap:.3rem;margin-bottom:1.3rem;
+  border-bottom:1px solid var(--border);
+}
+.rtab{
+  padding:.55rem 1rem;font-size:.8rem;font-weight:700;cursor:none;
+  border-bottom:2px solid transparent;color:var(--muted);
+  transition:var(--t);font-family:'Cabinet Grotesk',sans-serif;
+  background:none;border-top:none;border-left:none;border-right:none;
+}
+.rtab:hover{color:var(--text)}
+.rtab.active{color:var(--accent3);border-bottom-color:var(--accent)}
+.resume-panel{display:none}.resume-panel.active{display:block}
+.score-ring{
+  display:flex;flex-direction:column;align-items:center;
+  padding:1.2rem;background:var(--bg3);border-radius:var(--r2);margin-bottom:.9rem;
+}
+.score-big{font-family:'Bebas Neue',sans-serif;font-size:3rem;line-height:1;letter-spacing:.04em}
+.score-sub{font-size:.68rem;color:var(--muted);margin-top:3px}
+.imp-row{display:flex;gap:.65rem;align-items:flex-start;padding:.48rem 0;border-bottom:1px solid var(--border);font-size:.77rem}
+.imp-row:last-child{border-bottom:none}
+.imp-dot{width:5px;height:5px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.resume-preview{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);
+  padding:1.2rem;font-family:'JetBrains Mono',monospace;font-size:.71rem;
+  line-height:1.9;color:var(--text);white-space:pre-wrap;word-break:break-word;
+  max-height:500px;overflow-y:auto;
+}
+.upload-zone{
+  border:2px dashed var(--border2);border-radius:var(--r2);
+  padding:1.5rem;text-align:center;cursor:none;transition:var(--t);
+  font-size:.8rem;color:var(--muted);
+}
+.upload-zone:hover{border-color:var(--accent);background:rgba(91,76,245,.04)}
+.upload-zone.active{border-color:var(--neon);background:rgba(79,255,176,.04);color:var(--neon)}
+.github-profile-banner{
+  background:rgba(91,76,245,.07);border:1px solid rgba(91,76,245,.2);
+  border-radius:var(--r2);padding:.8rem 1.1rem;margin-bottom:.85rem;
+  display:flex;align-items:center;gap:.8rem;
+}
+.github-avatar{width:38px;height:38px;border-radius:50%;border:2px solid var(--accent)}
+.github-info-name{font-weight:800;font-size:.84rem}
+.github-info-meta{font-size:.68rem;color:var(--muted)}
+.smart-step{
+  display:flex;align-items:flex-start;gap:.75rem;
+  padding:.7rem;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);margin-bottom:.42rem;
+}
+.smart-step-icon{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.68rem;flex-shrink:0;font-weight:700;
+  font-family:'JetBrains Mono',monospace;
+}
+.smart-step-done{background:rgba(79,255,176,.14);border:1px solid rgba(79,255,176,.3);color:var(--neon)}
+.smart-step-active{background:rgba(91,76,245,.14);border:1px solid rgba(91,76,245,.3);color:var(--accent3);animation:pulse 1.5s infinite}
+.smart-step-pending{background:var(--bg4);border:1px solid var(--border2);color:var(--dim)}
+.smart-step-text{font-size:.73rem;color:var(--muted);padding-top:2px}
+.smart-step-title{font-weight:700;font-size:.79rem;color:var(--text);margin-bottom:.1rem}
+.repo-selected-chip{
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.18rem .58rem;background:rgba(0,229,255,.08);
+  border:1px solid rgba(0,229,255,.22);border-radius:5px;
+  font-size:.64rem;color:var(--neon2);margin:.18rem .18rem 0 0;
+  font-family:'JetBrains Mono',monospace;
+}
+.jd-analysis-box{
+  background:rgba(91,76,245,.05);border:1px solid rgba(91,76,245,.15);
+  border-radius:var(--r2);padding:.8rem 1rem;margin-bottom:.8rem;
+}
+
+/* ─── CHAT ───────────────────────────────────────────────── */
+.chat-shell{display:grid;grid-template-columns:195px 1fr;gap:1.5rem;align-items:start}
+.chat-topics{position:sticky;top:64px}
+.topic-btn{
+  width:100%;text-align:left;padding:.55rem .8rem;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);font-family:'Cabinet Grotesk',sans-serif;
+  font-size:.74rem;color:var(--muted);cursor:none;transition:var(--t);
+  margin-bottom:.38rem;line-height:1.4;font-weight:500;
+}
+.topic-btn:hover{border-color:var(--accent2);color:var(--text);background:rgba(91,76,245,.07);transform:translateX(3px)}
+.chat-box{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r3);display:flex;flex-direction:column;
+  height:640px;overflow:hidden;
+}
+.chat-top{
+  padding:.8rem 1.2rem;border-bottom:1px solid var(--border);
+  background:var(--bg3);display:flex;align-items:center;gap:.65rem;flex-shrink:0;
+}
+.chat-avatar{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--grad);display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:900;color:#000;flex-shrink:0;
+  font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;
+}
+.chat-name{font-weight:800;font-size:.83rem}
+.chat-status{font-size:.65rem;color:var(--neon)}
+.messages{flex:1;overflow-y:auto;padding:1.1rem;display:flex;flex-direction:column;gap:.8rem}
+.msg{max-width:82%}
+.msg.user{align-self:flex-end}
+.msg.ai{align-self:flex-start}
+.bubble{padding:.62rem .95rem;border-radius:12px;font-size:.8rem;line-height:1.68;white-space:pre-wrap;word-break:break-word}
+.msg.user .bubble{background:var(--grad);color:#000;border-radius:12px 12px 3px 12px;font-weight:500}
+.msg.ai .bubble{background:var(--bg3);border:1px solid var(--border2);border-radius:12px 12px 12px 3px}
+.chat-input-area{
+  padding:.75rem 1.1rem;border-top:1px solid var(--border);
+  background:var(--bg3);display:flex;gap:.55rem;align-items:flex-end;flex-shrink:0;
+}
+.chat-textarea{
+  flex:1;background:var(--bg2);border:1px solid var(--border2);
+  border-radius:9px;padding:.55rem .82rem;color:var(--text);
+  font-family:'Cabinet Grotesk',sans-serif;font-size:.8rem;
+  resize:none;min-height:35px;max-height:95px;outline:none;transition:var(--t);
+}
+.chat-textarea:focus{border-color:var(--accent)}
+.send-btn{
+  width:34px;height:34px;background:var(--grad);border:none;border-radius:9px;
+  cursor:none;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:var(--t);
+}
+.send-btn:hover{transform:scale(1.1)}
+.send-btn svg{width:13px;height:13px;fill:#000}
+.typing-dots{display:flex;gap:4px;align-items:center}
+.td{width:4px;height:4px;border-radius:50%;background:var(--muted);animation:tdAnim 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tdAnim{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
+
+/* ─── SCROLL REVEAL ──────────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
+
+/* ─── HAMBURGER / RESPONSIVE ─────────────────────────────── */
+.hamburger{
+  display:none;width:32px;height:32px;border:none;background:var(--bg3);
+  border-radius:var(--r);cursor:none;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;color:var(--text);transition:var(--t);
+}
+.hamburger:hover{background:var(--bg4)}
+.overlay-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:199;backdrop-filter:blur(4px)}
+.overlay-bg.show{display:block}
+@media(max-width:1100px){
+  .sotd-hero{grid-template-columns:1fr}
+  .sotd-right{display:none}
+  .roadmap-shell,.student-shell,.planner-shell,.chat-shell{grid-template-columns:1fr}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .form-panel,.chat-topics{position:static}
+  .chat-box{height:520px}
+}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .page-content{padding:1rem}
+  .feat-grid{grid-template-columns:1fr}
+  .hero{padding:1.5rem}
+  .topbar{padding:0 1rem}
+  .hamburger{display:flex!important}
+  .proj-grid,.ideas-grid{grid-template-columns:1fr 1fr}
+  .papers-grid{grid-template-columns:1fr 1fr}
+  .split{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .proj-grid,.ideas-grid,.papers-grid{grid-template-columns:1fr}
+  .hero h1{font-size:3rem}
+  .sotd-name{font-size:2rem}
+  .stats-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div onclick="showPage('home')" style="cursor:none">
+      <div class="logo-text">10xThink</div>
+      <div class="logo-sub">AI Career Intelligence</div>
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">🌙</button>
+  </div>
+
+  <div class="nav-sect">// main</div>
+  <button class="nav-item active" id="nav-home" onclick="showPage('home')">
+    <div class="nav-line"></div><span class="nav-icon">⌂</span>Dashboard
+  </button>
+  <button class="nav-item" id="nav-roadmap" onclick="showPage('roadmap')">
+    <div class="nav-line"></div><span class="nav-icon">◈</span>Career Roadmaps
+  </button>
+
+  <div class="nav-sect">// guidance</div>
+  <button class="nav-item" id="nav-student" onclick="showPage('student')">
+    <div class="nav-line"></div><span class="nav-icon">◉</span>Student Path
+  </button>
+  <button class="nav-item" id="nav-exams" onclick="showPage('exams')">
+    <div class="nav-line"></div><span class="nav-icon">◻</span>Exam Planner
+  </button>
+  <button class="nav-item" id="nav-papers" onclick="showPage('papers')">
+    <div class="nav-line"></div><span class="nav-icon">◈</span>Question Papers
+    <span class="nav-badge">NEW</span>
+  </button>
+
+  <div class="nav-sect">// tools</div>
+  <button class="nav-item" id="nav-projects" onclick="showPage('projects')">
+    <div class="nav-line"></div><span class="nav-icon">⬡</span>Project Hub
+  </button>
+  <button class="nav-item" id="nav-resume" onclick="showPage('resume')">
+    <div class="nav-line"></div><span class="nav-icon">◫</span>Resume AI
+  </button>
+
+  <div class="nav-sect">// assistant</div>
+  <button class="nav-item" id="nav-chat" onclick="showPage('chat')">
+    <div class="nav-line"></div><span class="nav-icon">⬡</span>AI Chat
+  </button>
+
+  <div class="sidebar-foot">
+    <div class="ai-pill" onclick="showPage('chat')" style="cursor:none">
+      <div class="ai-dot"></div>
+      <span class="ai-pill-text">AI Online — Unlimited</span>
+    </div>
+  </div>
+</aside>
+
+<div class="overlay-bg" id="overlay-bg" onclick="closeSidebar()"></div>
+
+<div class="main">
+  <div class="topbar">
+    <button class="hamburger" id="hamburger" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-title" id="topbar-title">DASHBOARD</div>
+    <div id="topbar-chip" class="topbar-chip chip chip-neon">AI Powered</div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- HOME -->
+    <div id="page-home" class="page active">
+      <div class="hero reveal">
+        <div class="hero-bg-grid"></div>
+        <div class="hero-orb hero-orb-1"></div>
+        <div class="hero-orb hero-orb-2"></div>
+        <div style="position:relative;z-index:1;padding-bottom:2.5rem">
+          <div class="hero-eyebrow">
+            <div class="hero-eyebrow-dot"></div>
+            AI-Powered Career Intelligence
+          </div>
+          <h1>
+            FROM<br>
+            <span class="stroke">CONFUSION</span><br>
+            TO <span class="glow">CLARITY</span>
+          </h1>
+          <p>Personalized roadmaps for ANY career — tech, medical, finance, creative, government. Exam planners, project guidance, resume AI & more.</p>
+          <div class="hero-btns">
+            <button class="btn btn-primary" onclick="showPage('roadmap')">Generate My Roadmap →</button>
+            <button class="btn btn-ghost" onclick="showPage('student')">Student Guidance</button>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('chat')">Ask AI Anything</button>
+          </div>
+        </div>
+        <div class="hero-ticker">
+          <div class="ticker-track">
+            <span>→ Full Stack Dev</span> <span>→ UPSC Officer</span> <span>→ Data Scientist</span> <span>→ MBBS Doctor</span> <span>→ CA</span> <span>→ UX Designer</span> <span>→ AI/ML Engineer</span> <span>→ Content Creator</span> <span>→ Investment Banker</span> <span>→ Product Manager</span> &nbsp;&nbsp;
+            <span>→ Full Stack Dev</span> <span>→ UPSC Officer</span> <span>→ Data Scientist</span> <span>→ MBBS Doctor</span> <span>→ CA</span> <span>→ UX Designer</span> <span>→ AI/ML Engineer</span> <span>→ Content Creator</span> <span>→ Investment Banker</span> <span>→ Product Manager</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card reveal reveal-delay-1"><div class="stat-num">500+</div><div class="stat-label">Career Paths</div></div>
+        <div class="stat-card reveal reveal-delay-2"><div class="stat-num">∞</div><div class="stat-label">AI Queries</div></div>
+        <div class="stat-card reveal reveal-delay-3"><div class="stat-num">50+</div><div class="stat-label">Exam Roadmaps</div></div>
+        <div class="stat-card reveal reveal-delay-4"><div class="stat-num">100+</div><div class="stat-label">Sample Papers</div></div>
+      </div>
+
+      <div class="feat-grid reveal">
+        <div class="feat-card" onclick="showPage('roadmap')">
+          <span class="feat-icon">◈</span>
+          <div class="feat-title">AI Career Roadmaps</div>
+          <div class="feat-desc">Step-by-step paths for ANY role — tech, medical, HR, influencer, SEO, finance & more.</div>
+          <span class="feat-arrow">↗</span>
+        </div>
+        <div class="feat-card" onclick="showPage('student')">
+          <span class="feat-icon">◉</span>
+          <div class="feat-title">Student Path</div>
+          <div class="feat-desc">Class 11–12 subject-wise roadmaps with chapter sequencing & daily study hours.</div>
+          <span class="feat-arrow">↗</span>
+        </div>
+        <div class="feat-card" onclick="showPage('exams')">
+          <span class="feat-icon">◻</span>
+          <div class="feat-title">Exam Planner</div>
+          <div class="feat-desc">Brutally honest study plans with topic/subtopic breakdowns & revision cycles.</div>
+          <span class="feat-arrow">↗</span>
+        </div>
+        <div class="feat-card" onclick="showPage('papers')">
+          <span class="feat-icon">⊞</span>
+          <div class="feat-title">Question Papers</div>
+          <div class="feat-desc">Last 5 years' papers for JEE, NEET, UPSC, GATE, CAT — view & download.</div>
+          <span class="feat-arrow">↗</span>
+        </div>
+        <div class="feat-card" onclick="showPage('resume')">
+          <span class="feat-icon">◫</span>
+          <div class="feat-title">Smart Resume AI</div>
+          <div class="feat-desc">Auto GitHub analysis, JD-matched projects, ATS optimization — zero manual work.</div>
+          <span class="feat-arrow">↗</span>
+        </div>
+        <div class="feat-card" onclick="showPage('chat')">
+          <span class="feat-icon">⬡</span>
+          <div class="feat-title">Unlimited AI Chat</div>
+          <div class="feat-desc">Ask anything — career switches, exam strategy, honest reality checks, skill gaps.</div>
+          <span class="feat-arrow">↗</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROADMAP -->
+    <div id="page-roadmap" class="page">
+      <div class="section-head">
+        <div class="page-tag chip chip-neon">AI Powered</div>
+        <h2>Career Roadmap Generator</h2>
+        <p>Enter any career and get a personalized, step-by-step roadmap with projects & resources</p>
+      </div>
+      <div class="roadmap-shell">
+        <div class="form-panel">
+          <div class="card form-col">
+            <div>
+              <label class="label">Target Career Goal</label>
+              <div class="autocomplete-wrap">
+                <input type="text" id="career-input" placeholder="e.g. Full Stack Dev, Doctor, CA…" oninput="handleCareerInput()" autocomplete="off"/>
+                <div id="autocomplete-list" class="autocomplete-list hidden"></div>
+              </div>
+            </div>
+            <div><label class="label">Timeline</label>
+              <select id="timeline-input">
+                <option value="3 months">3 Months (Intensive)</option>
+                <option value="6 months" selected>6 Months (Balanced)</option>
+                <option value="1 year">1 Year (Thorough)</option>
+                <option value="2 years">2 Years (Complete)</option>
+                <option value="as long as needed">Let AI Decide</option>
+              </select>
+            </div>
+            <div><label class="label">Current Level</label>
+              <select id="level-input">
+                <option>Complete Beginner</option><option>Student (Class 11–12)</option>
+                <option>College Student</option><option>Working Professional</option>
+              </select>
+            </div>
+            <div><label class="label">Domain</label>
+              <select id="domain-input">
+                <option value="any">Any / AI Decides</option>
+                <option value="technology">Technology & Software</option>
+                <option value="healthcare & medical">Healthcare & Medical</option>
+                <option value="business & management">Business & Management</option>
+                <option value="finance & accounting">Finance & Accounting</option>
+                <option value="marketing & digital">Marketing & Digital</option>
+                <option value="creative & design">Creative & Design</option>
+                <option value="government & civil services">Government & Civil Services</option>
+                <option value="content & media">Content Creation & Media</option>
+                <option value="law">Law</option>
+                <option value="education">Education & Teaching</option>
+              </select>
+            </div>
+            <div><label class="label">Custom Context (Optional)</label>
+              <textarea id="custom-prompt" rows="2" placeholder="e.g. Biology graduate transitioning to bioinformatics…"></textarea>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="generateRoadmap()">⚡ Generate Roadmap</button>
+            <div>
+              <div class="text-xs text-muted mb-xs">Quick picks:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:.3rem">
+                <button class="filter-btn" onclick="setCareer('Full Stack Developer')">Full Stack</button>
+                <button class="filter-btn" onclick="setCareer('Data Scientist')">Data Science</button>
+                <button class="filter-btn" onclick="setCareer('MBBS Doctor')">MBBS</button>
+                <button class="filter-btn" onclick="setCareer('Chartered Accountant')">CA</button>
+                <button class="filter-btn" onclick="setCareer('UX Designer')">UX Design</button>
+                <button class="filter-btn" onclick="setCareer('UPSC Civil Services Officer')">UPSC</button>
+                <button class="filter-btn" onclick="setCareer('AI/ML Engineer')">AI/ML</button>
+                <button class="filter-btn" onclick="setCareer('Content Creator / YouTuber')">YouTuber</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="roadmap-output">
+          <div id="roadmap-placeholder" class="empty-state">
+            <div class="empty-icon">◈</div>
+            <div style="font-weight:800;color:var(--text);font-size:1rem">Your roadmap appears here</div>
+            <div>Select a career and click Generate</div>
+          </div>
+          <div id="roadmap-loading" class="card hidden"><div class="loading-row"><div class="spinner"></div>Building your personalized roadmap…</div></div>
+          <div id="roadmap-result" class="card hidden">
+            <div class="flex-between mb-sm">
+              <div>
+                <h3 id="roadmap-title" style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.04em"></h3>
+                <p id="roadmap-meta" class="text-sm text-muted mt-xs"></p>
+              </div>
+              <div id="roadmap-pct" class="text-neon text-sm" style="font-weight:700;white-space:nowrap;flex-shrink:0;font-family:'JetBrains Mono',monospace">0%</div>
+            </div>
+            <div class="prog mb-md"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+            <div id="roadmap-warn" class="warn-bar hidden"></div>
+            <div class="step-list" id="step-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDENT PATH -->
+    <div id="page-student" class="page">
+      <div class="section-head">
+        <div class="page-tag chip chip-cyan">Class 11–12</div>
+        <h2>Student Career Path</h2>
+        <p>Subject-wise roadmaps with chapter sequencing, daily hours, and concept priorities</p>
+      </div>
+      <div class="student-shell">
+        <div>
+          <div class="card">
+            <div class="label" style="margin-bottom:.75rem">Select Your Stream</div>
+            <button class="stream-btn" onclick="selectStream('pcm',this)"><span class="stream-emoji">⚛️</span><div><div class="stream-name">PCM</div><div class="stream-sub">Physics · Chemistry · Maths</div></div></button>
+            <button class="stream-btn" onclick="selectStream('pcb',this)"><span class="stream-emoji">🧬</span><div><div class="stream-name">PCB</div><div class="stream-sub">Physics · Chemistry · Biology</div></div></button>
+            <button class="stream-btn" onclick="selectStream('pcmb',this)"><span class="stream-emoji">🔬</span><div><div class="stream-name">PCMB</div><div class="stream-sub">All four subjects</div></div></button>
+            <button class="stream-btn" onclick="selectStream('commerce',this)"><span class="stream-emoji">📊</span><div><div class="stream-name">Commerce</div><div class="stream-sub">Accounts · Business · Economics</div></div></button>
+            <button class="stream-btn" onclick="selectStream('arts',this)"><span class="stream-emoji">🎨</span><div><div class="stream-name">Arts / Humanities</div><div class="stream-sub">History · Literature · Social Sci</div></div></button>
+            <button class="stream-btn" onclick="selectStream('undecided',this)"><span class="stream-emoji">🤔</span><div><div class="stream-name">Not Decided Yet</div><div class="stream-sub">Take the AI career quiz →</div></div></button>
+          </div>
+        </div>
+        <div id="student-right">
+          <div id="student-placeholder" class="empty-state"><div class="empty-icon">◉</div><div style="font-weight:800;color:var(--text)">Select a stream to begin</div></div>
+          <div id="quiz-panel" class="card hidden">
+            <div class="flex-between mb-sm"><div style="font-weight:800;font-size:.95rem">Stream Discovery Quiz</div><div id="quiz-counter" class="text-sm text-muted" style="font-family:'JetBrains Mono',monospace">Q 1 / 7</div></div>
+            <div class="prog mb-md"><div class="prog-fill" id="quiz-prog" style="width:14%"></div></div>
+            <div id="quiz-question" class="quiz-q"></div>
+            <div id="quiz-options" class="mt-md"></div>
+          </div>
+          <div id="student-loading" class="card hidden"><div class="loading-row"><div class="spinner"></div>Generating subject-wise roadmap…</div></div>
+          <div id="student-result" class="hidden"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXAM PLANNER -->
+    <div id="page-exams" class="page">
+      <div class="section-head">
+        <div class="page-tag chip chip-gold">Study Planner</div>
+        <h2>Competitive Exam Planner</h2>
+        <p>Topic-by-topic study plans with revision cycles, practice tests & weak area focus</p>
+      </div>
+      <div class="planner-shell">
+        <div class="form-panel">
+          <div class="card form-col">
+            <div><label class="label">Exam</label>
+              <select id="exam-name" onchange="toggleCustomExam()">
+                <option>JEE Mains</option><option>JEE Advanced</option><option>NEET</option>
+                <option>UPSC CSE</option><option>GATE CS</option><option>GATE ECE</option>
+                <option>CAT (MBA)</option><option>SSC CGL</option><option>CUET</option>
+                <option>NDA</option><option>CLAT</option><option>IBPS PO</option>
+                <option value="custom">Other…</option>
+              </select>
+            </div>
+            <div id="custom-exam-wrap" class="hidden"><label class="label">Custom Exam Name</label><input type="text" id="custom-exam" placeholder="e.g. NIMCET, BITSAT…"/></div>
+            <div><label class="label">Exam Date</label><input type="date" id="exam-date"/></div>
+            <div><label class="label">Daily Study Hours</label>
+              <select id="study-hours">
+                <option value="2">2 hrs/day</option><option value="4" selected>4 hrs/day</option>
+                <option value="6">6 hrs/day</option><option value="8">8 hrs/day</option><option value="10">10+ hrs/day</option>
+              </select>
+            </div>
+            <div><label class="label">Current Prep Level</label>
+              <select id="prep-level">
+                <option>Not started yet</option><option>Basics done</option>
+                <option>~50% syllabus covered</option><option>Revision stage</option>
+              </select>
+            </div>
+            <div><label class="label">Weak Areas (optional)</label><input type="text" id="weak-areas" placeholder="e.g. Organic Chemistry, Integration…"/></div>
+            <button class="btn btn-primary btn-block" onclick="generateExamPlan()">📅 Create My Plan →</button>
+          </div>
+        </div>
+        <div>
+          <div id="exam-placeholder" class="empty-state"><div class="empty-icon">◻</div><div style="font-weight:800;color:var(--text)">Your plan appears here</div></div>
+          <div id="exam-loading" class="card hidden"><div class="loading-row"><div class="spinner"></div>Crafting your study plan…</div></div>
+          <div id="exam-result" class="hidden"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUESTION PAPERS -->
+    <div id="page-papers" class="page">
+      <div class="section-head">
+        <div class="page-tag chip chip-cyan">Resource Library</div>
+        <h2>Sample Question Papers</h2>
+        <p>Last 5 years' papers — click any year to view AI-generated sample questions</p>
+      </div>
+      <div class="filter-bar" id="papers-filter">
+        <button class="filter-btn active" onclick="filterPapers('all',this)">All Exams</button>
+        <button class="filter-btn" onclick="filterPapers('jee',this)">JEE</button>
+        <button class="filter-btn" onclick="filterPapers('neet',this)">NEET</button>
+        <button class="filter-btn" onclick="filterPapers('upsc',this)">UPSC</button>
+        <button class="filter-btn" onclick="filterPapers('gate',this)">GATE</button>
+        <button class="filter-btn" onclick="filterPapers('cat',this)">CAT</button>
+        <button class="filter-btn" onclick="filterPapers('ssc',this)">SSC</button>
+        <button class="filter-btn" onclick="filterPapers('cuet',this)">CUET</button>
+        <button class="filter-btn" onclick="filterPapers('clat',this)">CLAT</button>
+      </div>
+      <div class="papers-grid" id="papers-grid"></div>
+    </div>
+
+    <div id="paper-modal" class="paper-modal-overlay hidden" onclick="closePaperModal(event)">
+      <div class="paper-modal">
+        <div class="paper-modal-head">
+          <div><h3 id="paper-modal-title"></h3><div id="paper-modal-sub" class="text-sm text-muted mt-xs"></div></div>
+          <button class="modal-close" onclick="closePaperModalDirect()">✕</button>
+        </div>
+        <div class="paper-modal-body">
+          <div id="paper-modal-loading" class="loading-row"><div class="spinner"></div>Generating sample questions…</div>
+          <div id="paper-modal-content" class="hidden">
+            <div class="qp-preview" id="paper-qp-text"></div>
+            <div class="download-links" id="paper-download-links"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECT HUB -->
+    <div id="page-projects" class="page">
+      <div class="section-head">
+        <div class="page-tag chip chip-neon">Global Discovery</div>
+        <h2>Web Design Inspiration Hub</h2>
+        <p>The world's most celebrated websites + hands-on projects with AI mentoring — click any project for instant guidance</p>
+      </div>
+
+      <div id="proj-loading" class="card" style="margin-bottom:1rem"><div class="loading-row"><div class="spinner"></div>Loading today's featured site…</div></div>
+
+      <div id="sotd-container" class="hidden">
+        <div class="sotd-hero" id="sotd-hero">
+          <div class="sotd-left">
+            <div class="sotd-badge">🏆 Site of the Day · <span id="sotd-date"></span></div>
+            <div class="sotd-name" id="sotd-name">—</div>
+            <div class="sotd-cat" id="sotd-cat"></div>
+            <div class="sotd-why" id="sotd-why"></div>
+            <div class="sotd-scores">
+              <div class="score-pill"><span class="score-num" id="sotd-design">—</span><span class="score-lbl">Design</span></div>
+              <div class="score-pill"><span class="score-num" id="sotd-usability">—</span><span class="score-lbl">Usability</span></div>
+              <div class="score-pill"><span class="score-num" id="sotd-creativity">—</span><span class="score-lbl">Creativity</span></div>
+            </div>
+            <div style="display:flex;gap:.55rem;flex-wrap:wrap;margin-top:.5rem">
+              <a id="sotd-url" href="#" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Visit Site ↗</a>
+              <button class="btn btn-ghost btn-sm" onclick="loadProjects(true)">🔄 Refresh</button>
+            </div>
+          </div>
+          <div class="sotd-right">
+            <img class="sotd-img" id="sotd-img" src="" alt="Site of the Day" loading="lazy" onerror="this.style.display='none'"/>
+            <div class="sotd-img-overlay"></div>
+            <div class="sotd-ribbon" id="sotd-ribbon">SOTD</div>
+          </div>
+        </div>
+
+        <div class="sotm-bar">
+          <span class="sotm-crown">👑</span>
+          <div class="sotm-info">
+            <div class="sotm-label">Site of the Month — <span id="sotm-month"></span></div>
+            <div class="sotm-name" id="sotm-name"></div>
+          </div>
+          <div class="sotm-tags" id="sotm-tags"></div>
+          <a id="sotm-url" href="#" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">View →</a>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.85rem">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em;display:flex;align-items:center;gap:.65rem">
+            Global Gallery <span class="chip chip-gold" style="font-size:.56rem">Curated · Rotates Daily</span>
+          </div>
+          <div class="filter-bar" id="proj-filters" style="margin-bottom:0">
+            <button class="filter-btn active" onclick="filterAward('all',this)">All</button>
+            <button class="filter-btn" onclick="filterAward('SOTD',this)">SOTD</button>
+            <button class="filter-btn" onclick="filterAward('SOTM',this)">SOTM</button>
+            <button class="filter-btn" onclick="filterAward('HM',this)">Honorable</button>
+          </div>
+        </div>
+        <div class="proj-grid" id="proj-grid"></div>
+
+        <!-- BUILD-IT IDEAS — AI Mentored -->
+        <div class="divider"></div>
+
+        <div class="ideas-section-head">
+          <div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.04em;margin-bottom:.2rem">Build-It Project Ideas</div>
+            <div style="font-size:.76rem;color:var(--muted)">Click <span style="color:var(--neon);font-weight:700">Ask AI</span> on any project — get instant guidance right here in the chat</div>
+          </div>
+          <div class="filter-bar" id="idea-filters" style="margin-bottom:0">
+            <button class="filter-btn active" onclick="filterIdeas('all',this)">All</button>
+            <button class="filter-btn" onclick="filterIdeas('Frontend',this)">Frontend</button>
+            <button class="filter-btn" onclick="filterIdeas('Backend',this)">Backend</button>
+            <button class="filter-btn" onclick="filterIdeas('Full Stack',this)">Full Stack</button>
+            <button class="filter-btn" onclick="filterIdeas('DevOps',this)">DevOps</button>
+            <button class="filter-btn" onclick="filterIdeas('beginner',this)">Beginner</button>
+            <button class="filter-btn" onclick="filterIdeas('intermediate',this)">Intermediate</button>
+            <button class="filter-btn" onclick="filterIdeas('advanced',this)">Advanced</button>
+          </div>
+        </div>
+
+        <div id="ideas-container"></div>
+      </div>
+    </div>
+
+    <!-- RESUME AI -->
+    <div id="page-resume" class="page">
+      <div class="section-head">
+        <div class="page-tag chip chip-pink">Resume AI</div>
+        <h2>Smart Resume Builder</h2>
+        <p>Auto GitHub analysis · JD-matched projects · ATS optimization · zero manual selection</p>
+      </div>
+      <div class="resume-tabs">
+        <button class="rtab active" onclick="showResumeTab('analyze',this)">📊 Analyze Resume</button>
+        <button class="rtab" onclick="showResumeTab('generate',this)">✨ Smart Generate</button>
+        <button class="rtab" onclick="showResumeTab('github',this)">🐙 GitHub Resume</button>
+      </div>
+
+      <div id="rtab-analyze" class="resume-panel active">
+        <div class="split">
+          <div class="form-col">
+            <div class="card card-sm">
+              <label class="label">Upload Resume PDF</label>
+              <div class="upload-zone" id="upload-zone" onclick="document.getElementById('resume-file').click()">
+                📄 Click to upload PDF<br><span style="font-size:.7rem;color:var(--dim)">Text extracted automatically</span>
+                <input type="file" id="resume-file" accept=".pdf,.txt" style="display:none" onchange="handleResumeFile(event)"/>
+              </div>
+              <div id="pdf-extract-status" class="text-xs text-muted mt-xs hidden"></div>
+              <div class="label mt-sm">Or Paste Resume Text</div>
+              <textarea id="resume-text" rows="7" placeholder="Paste resume text here…"></textarea>
+            </div>
+            <div class="card card-sm"><label class="label">Job Description (optional)</label><textarea id="jd-text" rows="4" placeholder="Paste the JD for targeted analysis…"></textarea></div>
+            <div class="card card-sm"><label class="label">Target Role</label><input type="text" id="target-role" placeholder="e.g. Frontend Developer, Data Analyst…"/></div>
+            <button class="btn btn-primary btn-block" onclick="analyzeResume()">Analyze with AI →</button>
+          </div>
+          <div>
+            <div id="resume-placeholder" class="empty-state" style="min-height:240px"><div class="empty-icon">◫</div><div style="font-weight:800;color:var(--text)">AI Analysis appears here</div></div>
+            <div id="resume-loading" class="card hidden"><div class="loading-row"><div class="spinner"></div>Analyzing your resume…</div></div>
+            <div id="resume-result" class="card hidden"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="rtab-generate" class="resume-panel">
+        <div style="display:grid;grid-template-columns:330px 1fr;gap:1.3rem;align-items:start">
+          <div class="card form-col">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.04em;margin-bottom:.15rem">Smart Resume Generator</div>
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Provide JD + optionally upload existing resume. AI does the rest.</div>
+            <div class="card card-sm" style="background:rgba(91,76,245,.05);border-color:rgba(91,76,245,.15)">
+              <label class="label" style="color:var(--accent3)">Step 1 — Job Description (Required)</label>
+              <textarea id="gen-jd" rows="4" placeholder="Paste the full job description or type role + company…"></textarea>
+            </div>
+            <div>
+              <label class="label">Step 2 — Upload Existing Resume (Optional)</label>
+              <div class="upload-zone" id="gen-upload-zone" onclick="document.getElementById('gen-resume-file').click()" style="padding:.85rem">
+                📄 Upload existing resume PDF<br><span style="font-size:.65rem;color:var(--dim)">Your real data will be preserved & improved</span>
+                <input type="file" id="gen-resume-file" accept=".pdf,.txt" style="display:none" onchange="handleGenResumeFile(event)"/>
+              </div>
+              <div id="gen-extract-status" class="text-xs text-muted mt-xs hidden"></div>
+            </div>
+            <div>
+              <label class="label">Step 3 — GitHub (Optional)</label>
+              <div class="flex-row" style="gap:.42rem;margin-bottom:.3rem">
+                <input type="text" id="gen-github-user" placeholder="GitHub username" style="font-size:.76rem;padding:.45rem .7rem"/>
+                <button class="btn btn-ghost btn-xs" style="flex-shrink:0" onclick="fetchGenGithubQuick()">Fetch</button>
+              </div>
+              <div id="gen-github-status" class="text-xs text-muted hidden"></div>
+              <div id="gen-selected-repos" class="hidden" style="margin-top:.4rem"></div>
+            </div>
+            <div><label class="label">Experience Level</label>
+              <select id="gen-exp"><option>Fresher (0 experience)</option><option>1–2 years</option><option>3–5 years</option><option>Senior (5+ years)</option></select>
+            </div>
+            <div><label class="label">Extra Skills (optional)</label><input type="text" id="gen-skills" placeholder="e.g. React, Node.js, Python…"/></div>
+            <button class="btn btn-primary btn-block" onclick="generateResumeSmart()">✨ Generate ATS Resume →</button>
+          </div>
+          <div>
+            <div id="gen-placeholder" class="empty-state" style="min-height:180px"><div class="empty-icon">✨</div><div style="font-weight:800;color:var(--text)">Smart Resume appears here</div></div>
+            <div id="gen-steps" class="hidden" style="margin-bottom:.9rem"><div class="label mb-sm">AI Generation Progress</div><div id="gen-step-list"></div></div>
+            <div id="gen-jd-analysis" class="hidden jd-analysis-box"><div style="font-weight:700;font-size:.79rem;margin-bottom:.3rem">📋 JD Analysis</div><div id="gen-jd-role" class="text-xs text-muted"></div><div id="gen-jd-skills" style="display:flex;gap:.25rem;flex-wrap:wrap;margin-top:.35rem"></div></div>
+            <div id="gen-loading" class="card hidden"><div class="loading-row"><div class="spinner"></div><span id="gen-loading-text">Analyzing job description…</span></div></div>
+            <div id="gen-result" class="card hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;flex-wrap:wrap;gap:.5rem">
+                <div style="font-weight:800;font-size:.84rem">✅ ATS-Optimized Resume</div>
+                <div class="flex-row gap-sm flex-wrap">
+                  <button class="btn btn-ghost btn-sm" onclick="copyText('gen-preview')">📋 Copy</button>
+                  <button class="btn btn-primary btn-sm" onclick="downloadResumeAsPDF('gen-preview','Resume')">⬇️ Download PDF</button>
+                  <button class="btn btn-ghost btn-sm" onclick="downloadTxt('gen-preview','resume.txt')">📄 .txt</button>
+                </div>
+              </div>
+              <div class="resume-preview" id="gen-preview"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="rtab-github" class="resume-panel">
+        <div style="display:grid;grid-template-columns:310px 1fr;gap:1.3rem;align-items:start">
+          <div class="card form-col">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.04em;margin-bottom:.4rem">GitHub Resume</div>
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Enter username + role. AI fetches profile, auto-picks best repos, generates resume.</div>
+            <div><label class="label">GitHub Username</label><input type="text" id="github-username" placeholder="e.g. torvalds"/></div>
+            <div><label class="label">Target Role / JD</label><textarea id="github-jd" rows="3" placeholder="e.g. React Developer at Stripe, or paste full JD…"></textarea></div>
+            <div><label class="label">Experience Level</label>
+              <select id="github-exp"><option>Fresher</option><option>1–2 years</option><option>3–5 years</option><option>Senior (5+)</option></select>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="generateGithubResumeFull()">🚀 Auto-Generate Resume →</button>
+          </div>
+          <div>
+            <div id="github-placeholder" class="empty-state" style="min-height:180px"><div class="empty-icon">🐙</div><div style="font-weight:800;color:var(--text)">Enter GitHub username to begin</div></div>
+            <div id="github-progress" class="hidden" style="margin-bottom:.9rem"><div class="label mb-sm">Auto-Analysis Progress</div><div id="github-step-list"></div></div>
+            <div id="github-profile-area" class="hidden"></div>
+            <div id="github-loading" class="card hidden"><div class="loading-row"><div class="spinner"></div><span id="github-loading-text">Fetching repositories…</span></div></div>
+            <div id="github-result" class="card hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;flex-wrap:wrap;gap:.5rem">
+                <div style="font-weight:800;font-size:.84rem">🎯 GitHub-Optimized Resume</div>
+                <div class="flex-row gap-sm flex-wrap">
+                  <button class="btn btn-ghost btn-sm" onclick="copyText('github-preview')">📋 Copy</button>
+                  <button class="btn btn-primary btn-sm" onclick="downloadResumeAsPDF('github-preview','github-resume')">⬇️ Download PDF</button>
+                  <button class="btn btn-ghost btn-sm" onclick="downloadTxt('github-preview','resume-github.txt')">📄 .txt</button>
+                </div>
+              </div>
+              <div id="github-selected-repos" class="mb-sm hidden"></div>
+              <div class="resume-preview" id="github-preview"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="page-chat" class="page">
+      <div class="section-head">
+        <div class="page-tag chip chip-v">Unlimited AI</div>
+        <h2>Career AI Assistant</h2>
+        <p>Context-aware mentor for roadmaps, exam strategy, career switches & honest feedback</p>
+      </div>
+      <div class="chat-shell">
+        <div class="chat-topics">
+          <div class="text-xs text-muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.55rem;font-family:'JetBrains Mono',monospace">// quick topics</div>
+          <button class="topic-btn" onclick="quickMsg('How do I become a full stack developer from scratch in 6 months?')">🗺️ Full stack roadmap</button>
+          <button class="topic-btn" onclick="quickMsg('I have 3 months for JEE. Is it too late and what should I realistically target?')">📚 JEE reality check</button>
+          <button class="topic-btn" onclick="quickMsg('Best career options after PCM other than engineering?')">⚛️ PCM alternatives</button>
+          <button class="topic-btn" onclick="quickMsg('How do I transition from IT to product management?')">🔄 Career switch</button>
+          <button class="topic-btn" onclick="quickMsg('What skills should a fresher learn to get hired quickly?')">💼 Fresher skills</button>
+          <button class="topic-btn" onclick="quickMsg('I want to become a content creator / YouTuber. Realistic roadmap?')">📹 Content creator</button>
+          <button class="topic-btn" onclick="quickMsg('How do I become a Chartered Accountant? Full roadmap from Class 12.')">📊 CA roadmap</button>
+          <button class="topic-btn" onclick="quickMsg('How do I prepare for UPSC from scratch with no coaching?')">🏛️ UPSC self-study</button>
+        </div>
+        <div class="chat-box">
+          <div class="chat-top">
+            <div class="chat-avatar">10x</div>
+            <div><div class="chat-name">10xThink AI</div><div class="chat-status">● Online — Unlimited queries</div></div>
+          </div>
+          <div class="messages" id="messages">
+            <div class="msg ai"><div class="bubble">Hi! I'm your 10xThink AI career mentor 🚀
+
+I support ALL career domains — tech, medical, finance, law, content creation, government and more.
+
+Ask me:
+• Career roadmaps for any role
+• Study plans & exam strategies
+• Stream selection (PCM/PCB/Commerce/Arts)
+• Resume advice and skill gaps
+• Career switches and honest reality checks
+
+What would you like to work on today?</div></div>
+          </div>
+          <div class="chat-input-area">
+            <textarea class="chat-textarea" id="chat-input" placeholder="Ask anything about your career…" rows="1" onkeydown="chatKey(event)"></textarea>
+            <button class="send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- PROJECT GUIDE MODAL -->
+<div id="proj-guide-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:700;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(10px)">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r4);width:100%;max-width:720px;max-height:88vh;overflow-y:auto;box-shadow:0 40px 120px rgba(0,0,0,.8)">
+    <div style="padding:1.3rem 1.5rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;position:sticky;top:0;background:var(--bg2);z-index:1">
+      <div>
+        <h3 id="pg-title" style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.04em"></h3>
+        <div id="pg-meta" class="text-sm text-muted mt-xs"></div>
+      </div>
+      <button onclick="closeProjGuide()" style="width:26px;height:26px;border-radius:var(--r);background:var(--bg4);border:none;cursor:none;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--t);font-size:.9rem">✕</button>
+    </div>
+    <div style="padding:1.3rem 1.5rem">
+      <div id="pg-loading" class="loading-row"><div class="spinner"></div>AI is preparing your project guide…</div>
+      <div id="pg-content" class="hidden">
+        <div id="pg-text" style="font-size:.82rem;line-height:1.75;color:var(--text);white-space:pre-wrap;word-break:break-word"></div>
+        <div style="margin-top:1.2rem;display:flex;gap:.5rem;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="openInChat()" id="pg-chat-btn">💬 Continue in AI Chat →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── PDF.js ─────────────────────────────────────────────── */
+if(typeof pdfjsLib!=='undefined') pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+async function extractPDFText(file){
+  if(typeof pdfjsLib==='undefined') return null;
+  try{
+    const ab=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+    let text='';
+    for(let i=1;i<=Math.min(pdf.numPages,8);i++){
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      text+=content.items.map(s=>s.str).join(' ')+'\n';
+    }
+    return text.trim();
+  }catch(e){return null;}
+}
+
+/* ─── CUSTOM CURSOR ──────────────────────────────────────── */
+const cursorEl=document.getElementById('cursor');
+const cursorRing=document.getElementById('cursor-ring');
+let cx=0,cy=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  cx=e.clientX;cy=e.clientY;
+  cursorEl.style.left=cx+'px';cursorEl.style.top=cy+'px';
+});
+function animRing(){
+  rx+=(cx-rx)*.12;ry+=(cy-ry)*.12;
+  cursorRing.style.left=rx+'px';cursorRing.style.top=ry+'px';
+  requestAnimationFrame(animRing);
+}animRing();
+document.querySelectorAll('button,a,.feat-card,.proj-card,.idea-card,.paper-card,.stream-btn,.quiz-opt,.topic-btn').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cursorEl.classList.add('hovering');cursorRing.classList.add('hovering')});
+  el.addEventListener('mouseleave',()=>{cursorEl.classList.remove('hovering');cursorRing.classList.remove('hovering')});
+});
+document.addEventListener('mousedown',()=>cursorEl.classList.add('clicking'));
+document.addEventListener('mouseup',()=>cursorEl.classList.remove('clicking'));
+
+/* ─── SCROLL REVEAL ──────────────────────────────────────── */
+const revealObserver=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');revealObserver.unobserve(e.target)}});
+},{threshold:.08});
+function observeReveal(){document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));}
+observeReveal();
+
+/* ─── AI ─────────────────────────────────────────────────── */
+async function callAI(messages,system,maxTokens=1400){
+  const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages,system,max_tokens:maxTokens})});
+  const data=await res.json();
+  if(!res.ok) throw new Error(data.error||`Server error ${res.status}`);
+  const text=data?.content?.[0]?.text??data?.text??'';
+  if(!text) throw new Error('Empty response from AI');
+  return text;
+}
+function parseJSON(raw){
+  let c=raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+  const s=c.indexOf('{'),e=c.lastIndexOf('}');
+  if(s>=0&&e>=0) c=c.slice(s,e+1);
+  return JSON.parse(c);
+}
+function parseJSONArray(raw){
+  let c=raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+  const s=c.indexOf('['),e=c.lastIndexOf(']');
+  if(s>=0&&e>=0) c=c.slice(s,e+1);
+  return JSON.parse(c);
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ─── THEME ──────────────────────────────────────────────── */
+function toggleTheme(){
+  const html=document.documentElement;
+  const dark=html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme',dark?'light':'dark');
+  document.getElementById('theme-btn').textContent=dark?'☀️':'🌙';
+}
+
+/* ─── NAV ────────────────────────────────────────────────── */
+const PAGE_META={
+  home:{title:'DASHBOARD',chip:'Welcome Back',cls:'chip-neon'},
+  roadmap:{title:'CAREER ROADMAPS',chip:'AI Powered',cls:'chip-neon'},
+  student:{title:'STUDENT PATH',chip:'Class 11–12',cls:'chip-cyan'},
+  exams:{title:'EXAM PLANNER',chip:'Study Plan',cls:'chip-gold'},
+  papers:{title:'QUESTION PAPERS',chip:'Resource Library',cls:'chip-cyan'},
+  projects:{title:'PROJECT HUB',chip:'Global Discovery',cls:'chip-neon'},
+  resume:{title:'RESUME AI',chip:'Smart Build',cls:'chip-pink'},
+  chat:{title:'AI ASSISTANT',chip:'Unlimited',cls:'chip-v'},
+};
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const nav=document.getElementById('nav-'+name);if(nav) nav.classList.add('active');
+  const m=PAGE_META[name]||{};
+  document.getElementById('topbar-title').textContent=m.title||name.toUpperCase();
+  const chip=document.getElementById('topbar-chip');
+  chip.className='topbar-chip chip '+(m.cls||'');chip.textContent=m.chip||'';
+  if(name==='projects') loadProjects(false);
+  if(name==='papers') renderPapers('all');
+  closeSidebar();
+  setTimeout(observeReveal,100);
+}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay-bg').classList.toggle('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay-bg').classList.remove('show');}
+
+/* ─── AUTOCOMPLETE ───────────────────────────────────────── */
+const CAREERS=['Full Stack Developer','Frontend Developer','Backend Developer','React Developer','Node.js Developer','Data Scientist','Machine Learning Engineer','AI/ML Engineer','Data Analyst','Business Analyst','DevOps Engineer','Cloud Engineer','Cybersecurity Analyst','Blockchain Developer','Game Developer','UX/UI Designer','Graphic Designer','Motion Designer','Product Manager','MBBS Doctor','Dentist','Physiotherapist','Pharmacist','Nurse','Chartered Accountant','Financial Analyst','Investment Banker','Stock Trader','Digital Marketer','SEO Specialist','Content Creator','YouTuber','Influencer','Social Media Manager','HR Manager','Civil Engineer','Mechanical Engineer','Electrical Engineer','UPSC Civil Services Officer','IPS Officer','Lawyer / Advocate','Journalist','Content Writer','Fashion Designer','Interior Designer','Architect','Teacher / Professor','Startup Founder'];
+function handleCareerInput(){
+  const val=document.getElementById('career-input').value.toLowerCase();
+  const list=document.getElementById('autocomplete-list');
+  if(!val||val.length<2){list.classList.add('hidden');return;}
+  const matches=CAREERS.filter(c=>c.toLowerCase().includes(val)).slice(0,6);
+  if(!matches.length){list.classList.add('hidden');return;}
+  list.innerHTML=matches.map(m=>`<div class="ac-item" onclick="setCareer('${m.replace(/'/g,"\\'")}')">${m}</div>`).join('');
+  list.classList.remove('hidden');
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.autocomplete-wrap')) document.getElementById('autocomplete-list').classList.add('hidden');});
+function setCareer(v){document.getElementById('career-input').value=v;document.getElementById('autocomplete-list').classList.add('hidden');}
+
+/* ─── ROADMAP ────────────────────────────────────────────── */
+let rmSteps=[],rmDone=new Set();
+async function generateRoadmap(){
+  const career=document.getElementById('career-input').value.trim();
+  if(!career){alert('Please enter a career goal!');return;}
+  const timeline=document.getElementById('timeline-input').value;
+  const level=document.getElementById('level-input').value;
+  const domain=document.getElementById('domain-input').value;
+  const custom=document.getElementById('custom-prompt').value.trim();
+  show('roadmap-loading');hide('roadmap-placeholder');hide('roadmap-result');
+  const prompt=`Generate a detailed sequential career roadmap to become a "${career}".
+Timeline: ${timeline}, Level: ${level}, Domain: ${domain}${custom?'\nContext: '+custom:''}
+Output ONLY valid JSON:
+{"title":"Roadmap: <title>","duration":"<total>","timeline_note":"<warning if unrealistic, else empty>","steps":[{"num":1,"title":"<step>","desc":"<2-3 sentences>","skills":["s1","s2"],"time":"<e.g. 2-3 weeks>","project":"<hands-on task or empty>","video_resource":"<YouTube search query>","resources":"<best resource name>"}]}
+Include 8-12 steps.`;
+  try{
+    const raw=await callAI([{role:'user',content:prompt}],'Expert career coach. Output ONLY valid JSON.',1600);
+    const data=parseJSON(raw);
+    rmSteps=data.steps||[];rmDone=new Set();
+    document.getElementById('roadmap-title').textContent=data.title||career;
+    document.getElementById('roadmap-meta').textContent=`Est. ${data.duration} · ${rmSteps.length} milestones · tap ○ to mark done`;
+    const w=document.getElementById('roadmap-warn');
+    if(data.timeline_note){w.textContent='⚡ '+data.timeline_note;show(w);}else hide(w);
+    renderSteps();hide('roadmap-loading');show('roadmap-result');
+  }catch(e){
+    hide('roadmap-loading');
+    document.getElementById('step-list').innerHTML=`<div style="color:var(--red);padding:1rem;font-size:.82rem">⚠️ ${esc(e.message)}</div>`;
+    show('roadmap-result');
+  }
+}
+function renderSteps(){
+  const pct=rmSteps.length?Math.round(rmDone.size/rmSteps.length*100):0;
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('roadmap-pct').textContent=pct+'%';
+  document.getElementById('step-list').innerHTML=rmSteps.map((s,i)=>{
+    const done=rmDone.has(i);
+    const chips=(s.skills||[]).map(sk=>`<span class="chip chip-v">${esc(sk)}</span>`).join('');
+    const proj=s.project?`<span class="step-project-tag">🛠 ${esc(s.project)}</span>`:'';
+    const vid=s.video_resource?`<a class="step-video-link" href="https://www.youtube.com/results?search_query=${encodeURIComponent(s.video_resource)}" target="_blank" rel="noopener">▶ Watch Tutorial</a>`:'';
+    return `<div class="step-row${done?' done':''}"><div class="step-num${done?' done':''}" onclick="toggleStep(${i})">${done?'✓':s.num}</div><div class="step-body"><div class="step-title${done?' done':''}">${esc(s.title)}</div><div class="step-desc">${esc(s.desc)}</div><div class="step-chips">${chips}${proj}</div><div class="step-meta"><span>⏱ ${esc(s.time||'')}</span>${s.resources?`<span>📚 ${esc(s.resources)}</span>`:''} ${vid}</div></div></div>`;
+  }).join('');
+}
+function toggleStep(i){rmDone.has(i)?rmDone.delete(i):rmDone.add(i);renderSteps();}
+
+/* ─── STUDENT ────────────────────────────────────────────── */
+const QUIZ=[
+  {q:'What activity excites you most?',opts:['Solving maths & physics','Studying biology & health','Running a business','Creating art or writing','Building software']},
+  {q:'Where do you see yourself in 10 years?',opts:['Engineer or researcher','Doctor or healthcare','Entrepreneur or leader','Artist or journalist','Tech developer or PM']},
+  {q:'Which subject feels most natural?',opts:['Physics & Maths','Biology & Chemistry','Economics & Accounts','History & Literature','Computer Science']},
+  {q:'How do you prefer to work?',opts:['With data & systems','With patients/people','In business settings','With creative freedom','Building digital products']},
+  {q:'Your relationship with maths?',opts:['Love it — strongest subject','Manage basic maths','Prefer stats/economics','Avoid complex maths','Like programming/applied maths']},
+  {q:'What problems do you want to solve?',opts:['Engineering problems','Medical/health problems','Business/financial problems','Social/cultural problems','Tech/product problems']},
+  {q:'Which career appeals most?',opts:['IIT → Engineer','AIIMS → Doctor','IIM → Manager','NID → Designer/Writer','Startup → Developer']}
+];
+let quizIdx=0,quizAns=[];
+function selectStream(stream,btn){
+  document.querySelectorAll('.stream-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  hide('student-placeholder');hide('quiz-panel');hide('student-loading');
+  const r=document.getElementById('student-result');r.classList.add('hidden');r.innerHTML='';
+  if(stream==='undecided'){quizIdx=0;quizAns=[];renderQuiz();show('quiz-panel');}
+  else{show('student-loading');buildStreamRoadmap(stream);}
+}
+function renderQuiz(){
+  if(quizIdx>=QUIZ.length){finishQuiz();return;}
+  const q=QUIZ[quizIdx];
+  document.getElementById('quiz-question').textContent=q.q;
+  document.getElementById('quiz-counter').textContent=`Q ${quizIdx+1} / ${QUIZ.length}`;
+  document.getElementById('quiz-prog').style.width=((quizIdx+1)/QUIZ.length*100)+'%';
+  document.getElementById('quiz-options').innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="answerQuiz(${i},'${o.replace(/'/g,"\\'")}')">${o}</button>`).join('');
+}
+function answerQuiz(i,v){quizAns.push(v);quizIdx++;renderQuiz();}
+async function finishQuiz(){
+  hide('quiz-panel');show('student-loading');
+  const prompt=`Student quiz answers: ${quizAns.join(' | ')}
+Recommend best Indian Class 11-12 stream. Output ONLY valid JSON:
+{"recommended_stream":"PCM/PCB/PCMB/Commerce/Arts","reasoning":"<2 sentences>","top_careers":["c1","c2","c3"],"title":"<path>","duration":"<Class 11 to job>","daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"<Subject>","icon":"<emoji>","chapters":[{"title":"<ch>","priority":"high|medium|low","weeks":"2 weeks"}],"practice_strategy":"<1 sentence>"}],"steps":[{"num":1,"title":"...","desc":"...","skills":["s1"],"time":"...","resources":"..."}]}
+3-4 subjects, 6-8 steps.`;
+  try{const raw=await callAI([{role:'user',content:prompt}],'Output ONLY valid JSON.',1600);renderStudentResult(parseJSON(raw),true);}
+  catch(e){hide('student-loading');const r=document.getElementById('student-result');r.innerHTML=`<div class="card" style="color:var(--red);font-size:.82rem">⚠️ ${esc(e.message)}</div>`;r.classList.remove('hidden');}
+}
+async function buildStreamRoadmap(stream){
+  const labels={pcm:'PCM (Physics, Chemistry, Maths)',pcb:'PCB (Physics, Chemistry, Biology)',pcmb:'PCMB (all four)',commerce:'Commerce (Business, Accounts, Economics)',arts:'Arts & Humanities'};
+  const prompt=`Generate Class 11-12 ${labels[stream]} roadmap for India. Output ONLY valid JSON:
+{"title":"<path>","duration":"<Class 11 to job>","exam_options":["e1","e2","e3"],"top_careers":["c1","c2"],"daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"<Subject>","icon":"<emoji>","chapters":[{"title":"<ch>","priority":"high|medium|low","weeks":"2 weeks"}],"practice_strategy":"<1 sentence>"}],"steps":[{"num":1,"title":"...","desc":"...","skills":["s1"],"time":"...","resources":"..."}]}
+All main subjects, 5-7 chapters each, 8-10 steps.`;
+  try{const raw=await callAI([{role:'user',content:prompt}],'Output ONLY valid JSON.',1600);renderStudentResult(parseJSON(raw),false);}
+  catch(e){hide('student-loading');const r=document.getElementById('student-result');r.innerHTML=`<div class="card" style="color:var(--red);font-size:.82rem">⚠️ ${esc(e.message)}</div>`;r.classList.remove('hidden');}
+}
+function renderStudentResult(data,isQuiz){
+  hide('student-loading');
+  const examChips=(data.exam_options||[]).map(e=>`<span class="chip chip-cyan">${esc(e)}</span>`).join('');
+  const careerChips=(data.top_careers||[]).map(c=>`<span class="chip chip-v">${esc(c)}</span>`).join('');
+  const subjects=(data.subjects||[]).map(s=>`<div class="subject-card"><h4>${s.icon||'📖'} ${esc(s.name)}</h4>${(s.chapters||[]).map(c=>{const pc=c.priority==='high'?'prio-high':c.priority==='medium'?'prio-med':'prio-low';return`<div class="chapter-row"><span>${esc(c.title)}</span><div style="display:flex;align-items:center;gap:.42rem"><span class="text-xs text-muted">${esc(c.weeks||'')}</span><span class="chapter-priority ${pc}">${c.priority}</span></div></div>`;}).join('')}<div class="text-xs text-muted mt-sm">📌 ${esc(s.practice_strategy||'')}</div></div>`).join('');
+  const steps=(data.steps||[]).map(s=>`<div class="step-row"><div class="step-num">${s.num}</div><div class="step-body"><div class="step-title">${esc(s.title)}</div><div class="step-desc">${esc(s.desc||'')}</div><div class="step-chips">${(s.skills||[]).map(sk=>`<span class="chip chip-v">${esc(sk)}</span>`).join('')}</div><div class="step-meta"><span>⏱ ${esc(s.time||'')}</span>${s.resources?`<span>📚 ${esc(s.resources)}</span>`:''}</div></div></div>`).join('');
+  const hoursHtml=data.daily_hours?`<div class="card card-sm mb-md" style="display:flex;gap:1.5rem"><div><div class="text-xs text-muted">Class 11</div><div style="font-weight:800;color:var(--accent3)">${esc(data.daily_hours.class11||'')}</div></div><div><div class="text-xs text-muted">Class 12</div><div style="font-weight:800;color:var(--accent3)">${esc(data.daily_hours.class12||'')}</div></div></div>`:'';
+  const recBanner=isQuiz?`<div class="card mb-md" style="background:rgba(91,76,245,.07);border-color:rgba(91,76,245,.18)"><div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.04em;color:var(--accent3);margin-bottom:.25rem">AI Recommendation: ${esc(data.recommended_stream||'')}</div><div class="text-sm text-muted">${esc(data.reasoning||'')}</div></div>`:'';
+  const r=document.getElementById('student-result');
+  r.innerHTML=`${recBanner}<div class="card mb-md"><div class="flex-between flex-wrap mb-sm gap-sm"><div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.04em">${esc(data.title||'')}</div><span class="text-sm text-muted">${esc(data.duration||'')}</span></div><div style="display:flex;gap:.28rem;flex-wrap:wrap">${examChips}${careerChips}</div></div>${hoursHtml}<div class="mb-md"><div class="label mb-sm">Subject-wise Roadmap</div>${subjects}</div><div class="card"><div class="label mb-sm">Step-by-Step Path</div><div class="step-list">${steps}</div></div>`;
+  r.classList.remove('hidden');
+}
+
+/* ─── EXAM PLANNER ───────────────────────────────────────── */
+function toggleCustomExam(){const w=document.getElementById('custom-exam-wrap');document.getElementById('exam-name').value==='custom'?show(w):hide(w);}
+async function generateExamPlan(){
+  let exam=document.getElementById('exam-name').value;
+  if(exam==='custom') exam=document.getElementById('custom-exam').value.trim()||'Competitive Exam';
+  const dateVal=document.getElementById('exam-date').value;
+  const hours=document.getElementById('study-hours').value;
+  const prep=document.getElementById('prep-level').value;
+  const weak=document.getElementById('weak-areas').value.trim();
+  const daysLeft=dateVal?Math.ceil((new Date(dateVal)-Date.now())/86400000):90;
+  hide('exam-placeholder');show('exam-loading');hide('exam-result');
+  const prompt=`Create realistic study planner for ${exam}. Date: ${dateVal||'~3 months'} (${daysLeft} days). Daily: ${hours} hrs. Prep: ${prep}.${weak?' Weak: '+weak:''}
+Be BRUTALLY HONEST. Output ONLY valid JSON:
+{"exam":"${exam}","days_left":${daysLeft},"verdict":"<2 sentence honest assessment>","target":"<realistic score>","alert":"<warning if < 30 days not revision, else empty>","subject_breakdown":[{"subject":"<s>","icon":"<e>","weightage":"40%","topics":[{"topic":"<t>","subtopics":["st1","st2"],"days":"<days>","priority":"high|medium|low"}],"revision_cycles":2,"practice_tests":"<e.g. 3 mocks>"}],"weekly_blocks":[{"week":"Week 1-2","focus":"<topic>","intensity":"light|moderate|intense|brutal","daily":[{"day":"Mon-Tue","plan":"<plan>"},{"day":"Wed-Thu","plan":"<plan>"},{"day":"Fri-Sat","plan":"<plan>"},{"day":"Sun","plan":"Revision + Mock"}]}],"revision_plan":"<2 sentences>","weak_area_focus":"<advice>","tips":["t1","t2","t3"]}
+3-4 subjects, 3-5 weekly blocks.`;
+  try{const raw=await callAI([{role:'user',content:prompt}],'Brutally honest exam strategist. Output ONLY valid JSON.',1800);renderExamPlan(parseJSON(raw));}
+  catch(e){hide('exam-loading');document.getElementById('exam-result').innerHTML=`<div class="card" style="color:var(--red);font-size:.82rem">⚠️ ${esc(e.message)}</div>`;show('exam-result');}
+}
+function renderExamPlan(d){
+  hide('exam-loading');
+  const ic={light:'var(--neon)',moderate:'var(--gold)',intense:'var(--warm)',brutal:'var(--red)'};
+  const ib={light:'rgba(79,255,176,.08)',moderate:'rgba(255,209,102,.08)',intense:'rgba(255,159,90,.08)',brutal:'rgba(255,82,82,.1)'};
+  const alertHtml=d.alert?`<div style="padding:.75rem;background:rgba(255,82,82,.08);border:1px solid rgba(255,82,82,.25);border-radius:var(--r);margin-bottom:.9rem;font-size:.77rem;color:var(--red)">⚠️ <strong>Warning:</strong> ${esc(d.alert)}</div>`:'';
+  const subjects=(d.subject_breakdown||[]).map(s=>{
+    const topics=(s.topics||[]).map(t=>{const pc=t.priority==='high'?'prio-high':t.priority==='medium'?'prio-med':'prio-low';const subs=(t.subtopics||[]).map(st=>`<span class="chip chip-v" style="font-size:.6rem">${esc(st)}</span>`).join(' ');return`<div style="display:flex;align-items:flex-start;gap:.65rem;padding:.62rem 0;border-bottom:1px solid var(--border)"><div style="flex:1"><div style="font-weight:700;font-size:.8rem;margin-bottom:.18rem">${esc(t.topic)} <span class="chapter-priority ${pc}">${t.priority}</span></div><div style="display:flex;flex-wrap:wrap;gap:.22rem">${subs}</div></div><div class="text-xs text-muted" style="flex-shrink:0;margin-left:.38rem;font-family:'JetBrains Mono',monospace">${esc(t.days||'')}</div></div>`;}).join('');
+    return`<div class="card card-sm mb-md"><div class="flex-between mb-sm"><div style="font-weight:800;font-size:.84rem">${s.icon||'📖'} ${esc(s.subject)}</div><span class="chip chip-v">${esc(s.weightage||'')}</span></div>${topics}<div style="display:flex;gap:.9rem;margin-top:.65rem;font-size:.71rem;color:var(--muted)"><span>🔁 ${esc(String(s.revision_cycles||2))}x revision</span><span>📝 ${esc(s.practice_tests||'')}</span></div></div>`;
+  }).join('');
+  const weeks=(d.weekly_blocks||[]).map(w=>{const rows=(w.daily||[]).map(day=>`<tr><td>${esc(day.day)}</td><td>${esc(day.plan)}</td></tr>`).join('');return`<div class="week-block card card-sm mb-md"><div class="week-head"><div class="week-title">${esc(w.week)} — ${esc(w.focus)}</div><span class="intensity-badge" style="background:${ib[w.intensity]||'rgba(91,76,245,.08)'};color:${ic[w.intensity]||'var(--accent3)'}">${w.intensity}</span></div><table class="day-table"><tbody>${rows}</tbody></table></div>`;}).join('');
+  const tips=(d.tips||[]).map(t=>`<div style="display:flex;gap:.55rem;padding:.28rem 0;font-size:.77rem"><span style="color:var(--accent3)">→</span><span class="text-muted">${esc(t)}</span></div>`).join('');
+  document.getElementById('exam-result').innerHTML=`<div class="card mb-md"><div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.04em;color:var(--gold);margin-bottom:.28rem">${esc(d.exam)} — <span style="font-family:'JetBrains Mono',sans-serif;font-size:.9rem">${esc(String(d.days_left))} days left</span></div>${alertHtml}<div class="verdict-bar">${esc(d.verdict)}</div><div class="text-sm">Realistic target: <strong style="color:var(--neon)">${esc(d.target||'')}</strong></div></div><div class="label mb-sm">Subject Breakdown</div>${subjects}${d.weak_area_focus?`<div class="card card-sm mb-md" style="border-left:3px solid var(--pink)"><div class="label mb-xs">Weak Area Focus</div><div class="text-sm text-muted">${esc(d.weak_area_focus)}</div></div>`:''}<div class="label mb-sm">Weekly Schedule</div>${weeks}<div class="card"><div class="label mb-sm">Smart Tips</div>${tips}</div>`;
+  show('exam-result');
+}
+
+/* ─── QUESTION PAPERS ────────────────────────────────────── */
+const PAPERS_DATA=[
+  {exam:'JEE Mains',cat:'jee',years:[2025,2024,2023,2022,2021],topics:'Physics, Chemistry, Mathematics',official:'https://jeemain.nta.ac.in',searchQ:'JEE Mains question paper PDF'},
+  {exam:'JEE Advanced',cat:'jee',years:[2024,2023,2022,2021,2020],topics:'Physics, Chemistry, Mathematics',official:'https://jeeadv.ac.in',searchQ:'JEE Advanced question paper PDF'},
+  {exam:'NEET UG',cat:'neet',years:[2025,2024,2023,2022,2021],topics:'Physics, Chemistry, Biology',official:'https://neet.nta.nic.in',searchQ:'NEET UG question paper PDF'},
+  {exam:'UPSC CSE Prelims',cat:'upsc',years:[2024,2023,2022,2021,2020],topics:'GS Paper I, CSAT Paper II',official:'https://upsc.gov.in',searchQ:'UPSC CSE Prelims question paper PDF'},
+  {exam:'UPSC CSE Mains',cat:'upsc',years:[2024,2023,2022,2021,2020],topics:'GS I, II, III, IV + Essay',official:'https://upsc.gov.in',searchQ:'UPSC Mains question paper PDF'},
+  {exam:'GATE CS',cat:'gate',years:[2025,2024,2023,2022,2021],topics:'DSA, OS, DBMS, Networks, COA',official:'https://gate2025.iisc.ac.in',searchQ:'GATE CS question paper PDF'},
+  {exam:'GATE ECE',cat:'gate',years:[2025,2024,2023,2022,2021],topics:'Signals, Electronics, Communications',official:'https://gate2025.iisc.ac.in',searchQ:'GATE ECE question paper PDF'},
+  {exam:'CAT',cat:'cat',years:[2024,2023,2022,2021,2020],topics:'VARC, DILR, Quantitative',official:'https://iimcat.ac.in',searchQ:'CAT question paper PDF free'},
+  {exam:'SSC CGL',cat:'ssc',years:[2024,2023,2022,2021,2020],topics:'GK, Reasoning, Quant, English',official:'https://ssc.nic.in',searchQ:'SSC CGL question paper PDF'},
+  {exam:'CUET UG',cat:'cuet',years:[2024,2023,2022],topics:'Domain, Language, GTS',official:'https://cuet.samarth.ac.in',searchQ:'CUET UG question paper PDF'},
+  {exam:'CLAT',cat:'clat',years:[2025,2024,2023,2022,2021],topics:'English, GK, Legal, Reasoning, Quant',official:'https://consortiumofnlus.ac.in',searchQ:'CLAT question paper PDF'},
+];
+function renderPapers(cat){
+  const list=cat==='all'?PAPERS_DATA:PAPERS_DATA.filter(p=>p.cat===cat);
+  document.getElementById('papers-grid').innerHTML=list.map(p=>{
+    const yearBtns=p.years.map(y=>`<button class="btn btn-ghost btn-xs" onclick="openPaperModal('${esc(p.exam)}',${y},'${esc(p.searchQ)}')">${y}</button>`).join('');
+    return`<div class="paper-card"><div class="paper-year">${p.years[0]}</div><div class="paper-exam">${esc(p.exam)}</div><div class="paper-meta">${esc(p.topics)}</div><div class="paper-actions">${yearBtns}</div><div class="paper-actions mt-xs"><button class="btn btn-ghost btn-xs" onclick="window.open('${p.official}','_blank')">🌐 Official</button><button class="btn btn-ghost btn-xs" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(p.searchQ)}','_blank')">🔍 Search PDF</button><button class="btn btn-primary btn-xs" onclick="askPaper('${esc(p.exam)}')">🤖 AI Help</button></div></div>`;
+  }).join('');
+}
+function filterPapers(cat,btn){document.querySelectorAll('#papers-filter .filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderPapers(cat);}
+async function openPaperModal(exam,year,searchQ){
+  show('paper-modal');
+  document.getElementById('paper-modal-title').textContent=`${exam} — ${year}`;
+  document.getElementById('paper-modal-sub').textContent='AI-generated sample questions';
+  show('paper-modal-loading');hide('paper-modal-content');
+  try{
+    const text=await callAI([{role:'user',content:`Generate 8-10 realistic sample questions similar to ${exam} ${year} paper. Mix difficulty levels. For MCQs include 4 options. Number each question Q1, Q2... Start directly with Q1.`}],`Generate realistic ${exam} exam questions.`,1200);
+    document.getElementById('paper-qp-text').textContent=text;
+    const p=PAPERS_DATA.find(p=>p.exam===exam);
+    document.getElementById('paper-download-links').innerHTML=`<a href="${p?.official||'#'}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">🌐 Official Site</a><button class="btn btn-ghost btn-sm" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(searchQ+' '+year)}','_blank')">🔍 Find PDF Online</button><button class="btn btn-primary btn-sm" onclick="askPaper('${esc(exam)}')">🤖 AI Strategy</button>`;
+    hide('paper-modal-loading');show('paper-modal-content');
+  }catch(e){document.getElementById('paper-qp-text').textContent=`⚠️ ${e.message}\n\nVisit the official website for actual papers.`;hide('paper-modal-loading');show('paper-modal-content');}
+}
+function closePaperModal(e){if(e.target===document.getElementById('paper-modal')) closePaperModalDirect();}
+function closePaperModalDirect(){document.getElementById('paper-modal').classList.add('hidden');}
+function askPaper(exam){showPage('chat');document.getElementById('chat-input').value=`Give me topic-wise analysis of ${exam} — most important chapters, question frequency, and scoring strategy.`;sendMsg();}
+
+/* ─── PROJECT HUB ────────────────────────────────────────── */
+let allSites=[];
+const BUILD_IDEAS=[
+  // FRONTEND
+  {title:'Single-Page CV',desc:'A stunning single-page HTML resume to showcase your career and skills.',level:'beginner',cat:'Frontend',type:'HTML/CSS',tech:['HTML','CSS'],started:22834},
+  {title:'Personal Portfolio',desc:'Responsive multi-page portfolio with scroll animations and project gallery.',level:'beginner',cat:'Frontend',type:'CSS',tech:['HTML','CSS','JS'],started:14200},
+  {title:'Age Calculator',desc:'Date-based calculator with clean UI and date validation.',level:'beginner',cat:'Frontend',type:'JavaScript',tech:['HTML','CSS','JS'],started:8022},
+  {title:'Tabs Component',desc:'Accessible tabbed interface with ARIA roles and keyboard navigation.',level:'beginner',cat:'Frontend',type:'Component',tech:['HTML','CSS','JS'],started:6503},
+  {title:'Quiz App',desc:'Full interactive quiz with timer, score tracking, and animated results.',level:'intermediate',cat:'Frontend',type:'React',tech:['React','JS'],started:11111},
+  {title:'Weather Web App',desc:'Real-time weather with geolocation, 5-day forecast and animated icons.',level:'intermediate',cat:'Frontend',type:'API',tech:['JS','REST API'],started:10217},
+  {title:'GitHub Profile Viewer',desc:'Beautiful GitHub profile cards using the GitHub API with repo stats.',level:'intermediate',cat:'Frontend',type:'API Integration',tech:['React','GitHub API'],started:8892},
+  {title:'Expense Tracker',desc:'Budget app with charts, categories, and local storage persistence.',level:'intermediate',cat:'Frontend',type:'React',tech:['React','Chart.js'],started:7045},
+  {title:'Kanban Board',desc:'Drag-and-drop project management board with persistent state.',level:'advanced',cat:'Frontend',type:'React',tech:['React','DnD','TypeScript'],started:7534},
+  {title:'AI Chat Interface',desc:'LLM-powered streaming chat with message history and markdown.',level:'advanced',cat:'Frontend',type:'AI',tech:['Next.js','OpenAI','TypeScript'],started:8723},
+  // BACKEND
+  {title:'Task Tracker CLI',desc:'Command-line task manager with JSON persistence and categories.',level:'beginner',cat:'Backend',type:'Node.js',tech:['Node.js','JSON'],started:4992},
+  {title:'Unit Converter API',desc:'REST API to convert units — length, temperature, weight, currency.',level:'beginner',cat:'Backend',type:'REST API',tech:['Node.js','Express'],started:3811},
+  {title:'GitHub Activity Generator',desc:'Consume GitHub events API, format and serve via REST endpoint.',level:'intermediate',cat:'Backend',type:'API',tech:['Node.js','GitHub API'],started:5120},
+  {title:'URL Shortener',desc:'Bitly-clone with analytics, custom slugs, QR codes, and rate limiting.',level:'intermediate',cat:'Backend',type:'Full Stack',tech:['Node.js','Redis','PostgreSQL'],started:8445},
+  {title:'Markdown Note App',desc:'Notes backend with markdown parsing, tags, search, and auth.',level:'intermediate',cat:'Backend',type:'API',tech:['Node.js','MongoDB','JWT'],started:6876},
+  {title:'Broadcast Server',desc:'Real-time server that broadcasts messages to all connected clients.',level:'intermediate',cat:'Backend',type:'WebSocket',tech:['Node.js','WebSocket'],started:4120},
+  {title:'Realtime Chat Server',desc:'Socket.io-powered chat backend with rooms, user presence, and history.',level:'advanced',cat:'Backend',type:'WebSocket',tech:['Node.js','Socket.io','Redis'],started:9821},
+  {title:'Real-Time Leaderboard',desc:'Live scoring board with WebSockets, Redis sorted sets, and auth.',level:'advanced',cat:'Backend',type:'Full Stack',tech:['Node.js','Socket.io','Redis'],started:5356},
+  {title:'E-Commerce API',desc:'Full REST API — products, carts, orders, payments, and user auth.',level:'advanced',cat:'Backend',type:'API',tech:['Node.js','Stripe','PostgreSQL'],started:7678},
+  // DEVOPS
+  {title:'Basic Dockerfile',desc:'Containerize a simple Node.js web app with multi-stage Docker build.',level:'beginner',cat:'DevOps',type:'Docker',tech:['Docker','Node.js'],started:6200},
+  {title:'GitHub Actions CI',desc:'Set up CI pipeline: lint → test → build → notify on every push.',level:'beginner',cat:'DevOps',type:'CI/CD',tech:['GitHub Actions','YAML'],started:5500},
+  {title:'Static Site Deployment',desc:'Deploy a site to S3 + CloudFront with automatic SSL and CDN config.',level:'beginner',cat:'DevOps',type:'Cloud',tech:['AWS S3','CloudFront'],started:4800},
+  {title:'Multi-Container App',desc:'Orchestrate Node.js + PostgreSQL + Redis with Docker Compose.',level:'intermediate',cat:'DevOps',type:'Docker',tech:['Docker Compose','Nginx'],started:7100},
+  {title:'Monitoring & Alerting',desc:'Set up Prometheus + Grafana dashboards and PagerDuty alerts.',level:'intermediate',cat:'DevOps',type:'Monitoring',tech:['Prometheus','Grafana'],started:4300},
+  {title:'Nginx Log Analyser',desc:'Parse Nginx logs, compute top IPs/endpoints, serve insights API.',level:'intermediate',cat:'DevOps',type:'Scripting',tech:['Bash','Python','Node.js'],started:3900},
+  {title:'Infrastructure as Code',desc:'Provision full AWS environment with Terraform — VPC, EC2, RDS.',level:'advanced',cat:'DevOps',type:'IaC',tech:['Terraform','AWS'],started:5900},
+  {title:'Kubernetes Deployment',desc:'Deploy microservices to K8s with HPA, rolling updates, and secrets.',level:'advanced',cat:'DevOps',type:'Kubernetes',tech:['K8s','Helm','Docker'],started:6700},
+  {title:'Blue-Green Deployment',desc:'Zero-downtime deployment pipeline with Kubernetes and Argo CD.',level:'advanced',cat:'DevOps',type:'CI/CD',tech:['Argo CD','K8s','GitHub Actions'],started:4100},
+];
+
+let currentProjGuideTitle='';
+async function openProjectGuide(title,desc,tech,cat,level){
+  currentProjGuideTitle=title;
+  document.getElementById('proj-guide-modal').style.display='flex';
+  document.getElementById('pg-title').textContent=title;
+  document.getElementById('pg-meta').textContent=`${level} · ${cat} · ${tech.join(', ')}`;
+  hide('pg-content');document.getElementById('pg-loading').style.display='flex';
+  try{
+    const guide=await callAI([{role:'user',content:`Give a complete beginner guide for this project: "${title}"
+Description: ${desc}
+Tech stack: ${tech.join(', ')}
+Category: ${cat}, Level: ${level}
+
+Include:
+1. What you'll build (2-3 lines)
+2. Prerequisites (what you need to know first)
+3. Step-by-step setup (numbered, specific)
+4. Key concepts you'll learn
+5. How to extend / make it impressive
+6. Common mistakes to avoid
+
+Be specific, practical, and encouraging. Treat the reader as a smart beginner.`}],'Expert coding mentor. Be specific, practical, energetic.',1400);
+    document.getElementById('pg-text').textContent=guide;
+    document.getElementById('pg-loading').style.display='none';
+    show('pg-content');
+  }catch(e){
+    document.getElementById('pg-text').textContent='⚠️ '+e.message+'\n\nMake sure your server.js is running.';
+    document.getElementById('pg-loading').style.display='none';
+    show('pg-content');
+  }
+}
+function openInChat(){
+  closeProjGuide();
+  showPage('chat');
+  document.getElementById('chat-input').value=`I want to build the "${currentProjGuideTitle}" project. Can you give me a more detailed walkthrough and answer my questions as I go?`;
+  sendMsg();
+}
+function closeProjGuide(){document.getElementById('proj-guide-modal').style.display='none';}
+
+async function loadProjects(forceRefresh){
+  if(allSites.length&&!forceRefresh){renderSites('all');return;}
+  show('proj-loading');hide('sotd-container');
+  try{
+    const res=await fetch('/api/awwwards');
+    if(!res.ok) throw new Error('Server error');
+    const ct=res.headers.get('content-type')||'';
+    if(!ct.includes('json')) throw new Error('Server returned non-JSON. Is server.js running?');
+    const data=await res.json();
+    const sotd=data.sotd;
+    document.getElementById('sotd-name').textContent=sotd.name;
+    document.getElementById('sotd-cat').textContent=sotd.cat;
+    document.getElementById('sotd-why').textContent='"'+sotd.why+'"';
+    document.getElementById('sotd-date').textContent=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    document.getElementById('sotd-design').textContent=sotd.design;
+    document.getElementById('sotd-usability').textContent=sotd.usability;
+    document.getElementById('sotd-creativity').textContent=sotd.creativity;
+    document.getElementById('sotd-url').href=sotd.url;
+    document.getElementById('sotd-img').src=sotd.img;
+    document.getElementById('sotd-ribbon').textContent=sotd.award==='SOTM'?'SOTM':'SOTD';
+    const sotm=data.sotm;
+    document.getElementById('sotm-name').textContent=sotm.name;
+    document.getElementById('sotm-url').href=sotm.url;
+    document.getElementById('sotm-month').textContent=data.month||new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    document.getElementById('sotm-tags').innerHTML=(sotm.tags||[]).map(t=>`<span class="chip chip-gold" style="font-size:.58rem">${esc(t)}</span>`).join('');
+    allSites=data.sites||[];
+    hide('proj-loading');show('sotd-container');
+    renderSites('all');
+    renderIdeas('all');
+  }catch(e){
+    hide('proj-loading');
+    document.getElementById('sotd-container').innerHTML=`<div class="card"><div style="color:var(--red);font-size:.82rem;padding:.5rem">⚠️ ${esc(e.message)}</div><div class="text-xs text-muted mt-sm">Make sure server.js is running: <code style="background:var(--bg4);padding:.1rem .4rem;border-radius:4px;font-family:'JetBrains Mono',monospace">node server.js</code></div></div>`;
+    show('sotd-container');
+  }
+}
+function filterAward(award,btn){
+  document.querySelectorAll('#proj-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderSites(award);
+}
+function renderSites(filter){
+  const list=filter==='all'?allSites:allSites.filter(s=>s.award===filter);
+  const badgeCls={'SOTD':'badge-sotd','SOTM':'badge-sotm','HM':'badge-hm'};
+  document.getElementById('proj-grid').innerHTML=list.map(s=>`
+    <div class="proj-card" onclick="window.open('${s.url}','_blank')">
+      <div class="proj-thumb-wrap">
+        <img class="proj-thumb" src="${s.img}" alt="${esc(s.name)}" loading="lazy"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="proj-thumb-fallback" style="display:none">🌐</div>
+        <span class="proj-award-badge ${badgeCls[s.award]||'badge-hm'}">${s.award==='HM'?'Hon. Mention':s.award}</span>
+        <span class="proj-country-flag">${s.country||''}</span>
+      </div>
+      <div class="proj-body">
+        <div class="proj-category">${esc(s.cat)}</div>
+        <div class="proj-name">${esc(s.name)}</div>
+        <div class="proj-why">${esc(s.why)}</div>
+        <div class="proj-scores">
+          <span class="proj-score-item">Design <span class="proj-score-val">${s.design}</span></span>
+          <span class="proj-score-item">· UX <span class="proj-score-val">${s.usability}</span></span>
+          <span class="proj-score-item">· Creative <span class="proj-score-val">${s.creativity}</span></span>
+        </div>
+        <div class="proj-footer">
+          <span class="proj-url">${s.url.replace('https://','')}</span>
+          <div class="proj-tags-row">${(s.tags||[]).map(t=>`<span class="proj-tag">${esc(t)}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterIdeas(filter,btn){
+  document.querySelectorAll('#idea-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderIdeas(filter);
+}
+function renderIdeas(filter){
+  let list;
+  if(filter==='all') list=BUILD_IDEAS;
+  else if(['beginner','intermediate','advanced'].includes(filter)) list=BUILD_IDEAS.filter(i=>i.level===filter);
+  else list=BUILD_IDEAS.filter(i=>i.cat===filter);
+
+  // Group by category
+  const cats=['Frontend','Backend','DevOps'];
+  const catEmoji={Frontend:'⚡',Backend:'⚙️',DevOps:'🚀'};
+  const container=document.getElementById('ideas-container');
+
+  if(filter==='all'||['Frontend','Backend','DevOps'].includes(filter)){
+    const showCats=filter==='all'?cats:[filter];
+    container.innerHTML=showCats.map(cat=>{
+      const items=list.filter(i=>i.cat===cat);
+      if(!items.length) return '';
+      const lc={beginner:'level-beginner',intermediate:'level-intermediate',advanced:'level-advanced'};
+      return `
+        <div class="idea-category-banner">${catEmoji[cat]} ${cat}</div>
+        <div class="ideas-grid" style="margin-bottom:1.5rem">
+          ${items.map(p=>`
+            <div class="idea-card">
+              <div class="idea-header">
+                <span class="idea-level ${lc[p.level]}">${p.level}</span>
+                <span class="idea-type">${esc(p.type)}</span>
+              </div>
+              <div class="idea-title">${esc(p.title)}</div>
+              <div class="idea-desc">${esc(p.desc)}</div>
+              <div class="idea-tech">${(p.tech||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div>
+              <div class="flex-between mt-xs">
+                <div class="idea-started">👥 ${p.started>=1000?(p.started/1000).toFixed(1)+'k':p.started} started</div>
+                <button class="idea-ai-btn" onclick="event.stopPropagation();openProjectGuide('${esc(p.title).replace(/'/g,"\\'")}','${esc(p.desc).replace(/'/g,"\\'")}',${JSON.stringify(p.tech)},'${p.cat}','${p.level}')">✦ Ask AI</button>
+              </div>
+            </div>`).join('')}
+        </div>`;
+    }).join('');
+  } else {
+    const lc={beginner:'level-beginner',intermediate:'level-intermediate',advanced:'level-advanced'};
+    container.innerHTML=`<div class="ideas-grid">${list.map(p=>`
+      <div class="idea-card">
+        <div class="idea-header">
+          <span class="idea-level ${lc[p.level]}">${p.level}</span>
+          <span class="idea-type">${esc(p.type)}</span>
+        </div>
+        <div class="idea-title">${esc(p.title)}</div>
+        <div class="idea-desc">${esc(p.desc)}</div>
+        <div class="idea-tech">${(p.tech||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div>
+        <div class="flex-between mt-xs">
+          <div class="idea-started">👥 ${p.started>=1000?(p.started/1000).toFixed(1)+'k':p.started} started</div>
+          <button class="idea-ai-btn" onclick="event.stopPropagation();openProjectGuide('${esc(p.title).replace(/'/g,"\\'")}','${esc(p.desc).replace(/'/g,"\\'")}',${JSON.stringify(p.tech)},'${p.cat}','${p.level}')">✦ Ask AI</button>
+        </div>
+      </div>`).join('')}</div>`;
+  }
+}
+
+/* ─── RESUME FILE HANDLING ───────────────────────────────── */
+async function handleResumeFile(e){
+  const file=e.target.files[0];if(!file) return;
+  const zone=document.getElementById('upload-zone');
+  const status=document.getElementById('pdf-extract-status');
+  zone.innerHTML=`⏳ Extracting: ${file.name}…`;zone.classList.add('active');show(status);status.textContent='Extracting PDF text…';
+  if(file.type==='application/pdf'){
+    const text=await extractPDFText(file);
+    if(text&&text.length>50){document.getElementById('resume-text').value=text;status.textContent=`✅ Extracted ${text.length} chars`;zone.innerHTML=`✅ ${file.name}`;}
+    else{status.textContent='⚠️ Could not extract. Paste text below.';}
+  }else{const reader=new FileReader();reader.onload=ev=>{document.getElementById('resume-text').value=ev.target.result;status.textContent='✅ Loaded';};reader.readAsText(file);}
+}
+let genResumeBase='',genGithubData=null;
+async function handleGenResumeFile(e){
+  const file=e.target.files[0];if(!file) return;
+  const zone=document.getElementById('gen-upload-zone');const status=document.getElementById('gen-extract-status');
+  zone.innerHTML=`⏳ Extracting: ${file.name}…`;zone.classList.add('active');show(status);status.textContent='Extracting PDF text…';
+  if(file.type==='application/pdf'){
+    const text=await extractPDFText(file);
+    if(text&&text.length>50){genResumeBase=text;status.textContent='✅ Resume data extracted — structure & real data will be preserved';}
+    else{status.textContent='⚠️ Could not extract. Add skills manually.';genResumeBase=`Uploaded: ${file.name}`;}
+  }else{const reader=new FileReader();reader.onload=ev=>{genResumeBase=ev.target.result;status.textContent='✅ Loaded';};reader.readAsText(file);}
+}
+async function fetchGenGithubQuick(){
+  const username=document.getElementById('gen-github-user').value.trim();if(!username) return;
+  const status=document.getElementById('gen-github-status');show(status);status.textContent='⏳ Fetching GitHub repos…';
+  try{
+    const res=await fetch('/api/github/auto-resume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username})});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Failed');
+    genGithubData=data;status.textContent=`✅ @${username}: ${data.repos.length} repos found`;
+    const container=document.getElementById('gen-selected-repos');show(container);
+    container.innerHTML=`<div class="text-xs text-muted mb-xs">Repos (AI will pick best for your JD):</div>`+data.repos.slice(0,8).map(r=>`<span class="repo-selected-chip">⭐${r.stars} ${esc(r.name)}</span>`).join('');
+  }catch(err){status.textContent=`⚠️ ${err.message}`;}
+}
+
+async function generateResumeSmart(){
+  const jd=document.getElementById('gen-jd').value.trim();
+  const exp=document.getElementById('gen-exp').value;
+  const skills=document.getElementById('gen-skills').value.trim();
+  if(!jd){alert('Please enter a job description or target role!');return;}
+  hide('gen-placeholder');hide('gen-result');show('gen-steps');show('gen-loading');
+  const steps=[
+    {icon:'🔍',title:'Analyzing Job Description',text:'Extracting required skills, tech stack, and role requirements…'},
+    {icon:'🐙',title:'Matching GitHub Repositories',text:'AI selecting most relevant projects for this role…'},
+    {icon:'📝',title:'Building Resume Structure',text:'Organizing real data from your existing resume…'},
+    {icon:'✨',title:'ATS Optimization',text:'Injecting keywords and formatting for maximum ATS score…'},
+  ];
+  renderSmartSteps(steps,0);
+  try{
+    let jdAnalysis={role:'',skills:[],tech:[]};
+    try{
+      const jdRaw=await callAI([{role:'user',content:`Analyze this JD. Output ONLY JSON: {"role":"<role>","company":"<company or empty>","skills":["s1","s2","s3","s4","s5"],"tech":["t1","t2","t3"],"level":"<junior/mid/senior>"}\n\nJD: ${jd}`}],'Output ONLY valid JSON.',400);
+      jdAnalysis=parseJSON(jdRaw);
+      show('gen-jd-analysis');
+      document.getElementById('gen-jd-role').textContent=`Role: ${jdAnalysis.role||'Software Developer'}${jdAnalysis.company?' @ '+jdAnalysis.company:''}`;
+      document.getElementById('gen-jd-skills').innerHTML=[...(jdAnalysis.skills||[]),...(jdAnalysis.tech||[])].map(s=>`<span class="chip chip-v" style="font-size:.6rem">${esc(s)}</span>`).join('');
+    }catch(e){}
+    renderSmartSteps(steps,1);
+    let repoSection='';
+    if(genGithubData&&genGithubData.repos.length){
+      const repoSummary=genGithubData.repos.map(r=>`${r.name} (${r.language}): ${r.description} [⭐${r.stars}]`).join('\n');
+      try{
+        const selRaw=await callAI([{role:'user',content:`JD/Role: ${jd}\nRequired: ${[...jdAnalysis.skills,...jdAnalysis.tech].join(', ')}\n\nRepos:\n${repoSummary}\n\nSelect 4-6 most relevant. Return ONLY JSON array: ["repo1","repo2"]`}],'Output ONLY a JSON array.',400);
+        const selected=parseJSONArray(selRaw);
+        const selRepos=genGithubData.repos.filter(r=>selected.includes(r.name)).slice(0,6);
+        if(selRepos.length) repoSection=`\n\nAUTO-SELECTED GITHUB PROJECTS:\n${selRepos.map(r=>`• ${r.name} (${r.language}): ${r.description} [⭐${r.stars}]`).join('\n')}`;
+      }catch(e){repoSection=`\n\nGITHUB PROJECTS:\n${genGithubData.repos.slice(0,5).map(r=>`• ${r.name} (${r.language}): ${r.description}`).join('\n')}`;}
+    }
+    renderSmartSteps(steps,2);
+    document.getElementById('gen-loading-text').textContent='Generating ATS-optimized resume…';
+    const existingCtx=genResumeBase?`\n\nEXISTING RESUME (PRESERVE REAL NAME, DATES, COMPANIES — improve wording only):\n${genResumeBase.slice(0,3000)}`:'';
+    const prompt=`Expert ATS resume writer. Create a professional, ATS-optimized resume.
+TARGET ROLE / JD: ${jd}
+EXPERIENCE LEVEL: ${exp}
+REQUIRED SKILLS (from JD analysis): ${[...(jdAnalysis.skills||[]),...(jdAnalysis.tech||[])].join(', ')}
+${skills?'ADDITIONAL SKILLS: '+skills:''}${existingCtx}${repoSection}
+Structure: HEADER → PROFESSIONAL SUMMARY → TECHNICAL SKILLS → WORK EXPERIENCE → PROJECTS → EDUCATION → CERTIFICATIONS
+Use ═══════════════════════════════ as section separators. Strong action verbs + measurable outcomes.`;
+    renderSmartSteps(steps,3);
+    const text=await callAI([{role:'user',content:prompt}],'Expert ATS resume writer. Output clean formatted plain text.',2200);
+    document.getElementById('gen-preview').textContent=text;
+    hide('gen-loading');show('gen-result');
+    renderSmartStepsDone(steps);
+  }catch(e){hide('gen-loading');show('gen-result');document.getElementById('gen-preview').textContent='⚠️ '+e.message;}
+}
+function renderSmartSteps(steps,activeIdx){
+  document.getElementById('gen-step-list').innerHTML=steps.map((s,i)=>{
+    const cls=i<activeIdx?'smart-step-done':i===activeIdx?'smart-step-active':'smart-step-pending';
+    const icon=i<activeIdx?'✓':i===activeIdx?'…':(i+1);
+    return`<div class="smart-step"><div class="smart-step-icon ${cls}">${icon}</div><div><div class="smart-step-title">${s.icon} ${s.title}</div><div class="smart-step-text">${s.text}</div></div></div>`;
+  }).join('');
+}
+function renderSmartStepsDone(steps){
+  document.getElementById('gen-step-list').innerHTML=steps.map(s=>`<div class="smart-step"><div class="smart-step-icon smart-step-done">✓</div><div><div class="smart-step-title">${s.icon} ${s.title}</div></div></div>`).join('');
+}
+
+/* ─── GITHUB RESUME ──────────────────────────────────────── */
+async function generateGithubResumeFull(){
+  const username=document.getElementById('github-username').value.trim();
+  const jd=document.getElementById('github-jd').value.trim();
+  const exp=document.getElementById('github-exp').value;
+  if(!username){alert('Enter a GitHub username!');return;}
+  if(!jd){alert('Enter a target role or job description!');return;}
+  hide('github-placeholder');hide('github-result');show('github-progress');show('github-loading');
+  const steps=[
+    {icon:'🐙',title:'Fetching GitHub Profile',text:'Loading profile, repos, and contribution data…'},
+    {icon:'🔍',title:'Analyzing Job Description',text:'Extracting required skills and tech stack…'},
+    {icon:'🤖',title:'Auto-Selecting Repositories',text:'AI picking best repos for this role…'},
+    {icon:'📝',title:'Generating Resume',text:'Building ATS-optimized resume with real project data…'},
+  ];
+  renderGithubSteps(steps,0);
+  try{
+    document.getElementById('github-loading-text').textContent='Fetching GitHub data…';
+    const res=await fetch('/api/github/auto-resume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,jd,exp})});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'GitHub fetch failed — check username is correct');
+    const {profile,repos}=data;
+    const profileArea=document.getElementById('github-profile-area');
+    profileArea.innerHTML=`<div class="github-profile-banner"><img class="github-avatar" src="${profile.avatar_url}" alt="avatar" onerror="this.style.display='none'"><div><div class="github-info-name">${esc(profile.name||profile.login)}</div><div class="github-info-meta">@${esc(profile.login)} · ${profile.public_repos} repos · ${profile.followers||0} followers</div>${profile.bio?`<div class="github-info-meta">${esc(profile.bio)}</div>`:''}</div></div>`;
+    show(profileArea);renderGithubSteps(steps,1);
+    document.getElementById('github-loading-text').textContent='Analyzing JD…';
+    let jdAnalysis={role:'Software Developer',skills:[],tech:[]};
+    try{
+      const jdRaw=await callAI([{role:'user',content:`Extract key info from this JD. Output ONLY JSON: {"role":"<role>","skills":["s1","s2","s3"],"tech":["t1","t2","t3"]}\n\nJD: ${jd}`}],'Output ONLY valid JSON.',400);
+      jdAnalysis=parseJSON(jdRaw);
+    }catch(e){}
+    renderGithubSteps(steps,2);
+    document.getElementById('github-loading-text').textContent='AI selecting best repos…';
+    const repoSummary=repos.map(r=>`${r.name} (${r.language}): ${r.description} [⭐${r.stars}]`).join('\n');
+    let selectedRepos=repos.slice(0,5);
+    try{
+      const selRaw=await callAI([{role:'user',content:`Target role: ${jd}\nRequired skills: ${[...jdAnalysis.skills,...jdAnalysis.tech].join(', ')}\n\nRepos:\n${repoSummary}\n\nSelect 5-7 most relevant. Return ONLY JSON array: ["name1","name2"]`}],'Output ONLY a JSON array.',400);
+      const selected=parseJSONArray(selRaw);
+      const matched=repos.filter(r=>selected.includes(r.name)).slice(0,7);
+      if(matched.length) selectedRepos=matched;
+    }catch(e){}
+    const reposEl=document.getElementById('github-selected-repos');
+    reposEl.innerHTML=`<div class="text-xs text-muted mb-xs">🤖 Auto-selected ${selectedRepos.length} repos:</div>`+selectedRepos.map(r=>`<span class="repo-selected-chip">⭐${r.stars} ${esc(r.name)}</span>`).join('');
+    show(reposEl);renderGithubSteps(steps,3);
+    document.getElementById('github-loading-text').textContent='Generating resume…';
+    const repoDetails=selectedRepos.map(r=>`• ${r.name} (${r.language}): ${r.description} [⭐${r.stars}]`).join('\n');
+    const profileInfo=`Name: ${profile.name||profile.login}, Bio: ${profile.bio||'Developer'}, Location: ${profile.location||'India'}, GitHub: github.com/${profile.login}`;
+    const prompt=`Create a professional ATS-optimized resume for: ${jd}\nExperience: ${exp}\nDeveloper profile: ${profileInfo}\nRequired skills: ${[...jdAnalysis.skills,...jdAnalysis.tech].join(', ')}\n\nGITHUB PROJECTS:\n${repoDetails}\n\nStructure with ═══════════════════════════════ separators. Make it impressive.`;
+    const text=await callAI([{role:'user',content:prompt}],'Expert ATS resume writer. Clean formatted text.',2200);
+    document.getElementById('github-preview').textContent=text;
+    hide('github-loading');show('github-result');renderGithubStepsDone(steps);
+  }catch(e){
+    hide('github-loading');
+    const ph=document.getElementById('github-placeholder');
+    ph.innerHTML=`<div class="empty-icon">⚠️</div><div style="color:var(--red);font-size:.82rem">${esc(e.message)}</div>`;
+    show('github-placeholder');hide('github-progress');
+  }
+}
+function renderGithubSteps(steps,activeIdx){
+  document.getElementById('github-step-list').innerHTML=steps.map((s,i)=>{
+    const cls=i<activeIdx?'smart-step-done':i===activeIdx?'smart-step-active':'smart-step-pending';
+    const icon=i<activeIdx?'✓':i===activeIdx?'…':(i+1);
+    return`<div class="smart-step"><div class="smart-step-icon ${cls}">${icon}</div><div><div class="smart-step-title">${s.icon} ${s.title}</div><div class="smart-step-text">${s.text}</div></div></div>`;
+  }).join('');
+}
+function renderGithubStepsDone(steps){
+  document.getElementById('github-step-list').innerHTML=steps.map(s=>`<div class="smart-step"><div class="smart-step-icon smart-step-done">✓</div><div><div class="smart-step-title">${s.icon} ${s.title}</div></div></div>`).join('');
+}
+
+/* ─── RESUME ANALYZE ─────────────────────────────────────── */
+async function analyzeResume(){
+  const resume=document.getElementById('resume-text').value.trim();
+  const jd=document.getElementById('jd-text').value.trim();
+  const role=document.getElementById('target-role').value.trim();
+  if(!resume){alert('Please paste your resume text or upload a PDF first!');return;}
+  hide('resume-placeholder');hide('resume-result');show('resume-loading');
+  const prompt=`Analyze this resume${role?' for '+role+' role':''}${jd?', against JD':''}.\nRESUME:\n${resume}${jd?'\nJD:\n'+jd:''}\nOutput ONLY valid JSON:\n{"ats_score":72,"verdict":"<1 honest sentence>","strengths":["s1","s2","s3"],"improvements":[{"type":"critical","text":"..."},{"type":"warning","text":"..."},{"type":"tip","text":"..."}],"missing_keywords":["k1","k2","k3","k4","k5"],"quick_wins":["w1","w2","w3"]}`;
+  try{const raw=await callAI([{role:'user',content:prompt}],'Expert ATS resume coach. Output ONLY valid JSON.');renderResumeAnalysis(parseJSON(raw));}
+  catch(e){hide('resume-loading');show('resume-result');document.getElementById('resume-result').innerHTML=`<div style="color:var(--red);font-size:.82rem">⚠️ ${esc(e.message)}</div>`;}
+}
+function renderResumeAnalysis(d){
+  hide('resume-loading');
+  const score=d.ats_score||70;
+  const sc=score>=80?'var(--neon)':score>=60?'var(--gold)':'var(--red)';
+  const dotC={critical:'var(--red)',warning:'var(--gold)',tip:'var(--neon2)'};
+  const imps=(d.improvements||[]).map(i=>`<div class="imp-row"><div class="imp-dot" style="background:${dotC[i.type]||'var(--muted)'}"></div><div class="text-sm">${esc(i.text)}</div></div>`).join('');
+  const kws=(d.missing_keywords||[]).map(k=>`<span class="chip chip-red">${esc(k)}</span>`).join('');
+  const wins=(d.quick_wins||[]).map(w=>`<div style="display:flex;gap:.48rem;padding:.26rem 0;font-size:.77rem"><span style="color:var(--neon)">✓</span>${esc(w)}</div>`).join('');
+  const str=(d.strengths||[]).map(s=>`<div style="display:flex;gap:.48rem;padding:.26rem 0;font-size:.77rem"><span style="color:var(--accent3)">★</span>${esc(s)}</div>`).join('');
+  document.getElementById('resume-result').innerHTML=`<div class="score-ring"><div class="score-big" style="color:${sc}">${score}<span style="font-size:1rem">/100</span></div><div class="score-sub">ATS Compatibility Score</div></div><div style="padding:.65rem .9rem;background:var(--bg3);border-radius:var(--r);border-left:3px solid ${sc};font-size:.79rem;margin-bottom:.9rem;line-height:1.65">${esc(d.verdict||'')}</div>${str?`<div class="label mb-xs">Strengths</div>${str}<div style="height:1px;background:var(--border);margin:1rem 0"></div>`:''}<div class="label mb-xs">Improvements</div>${imps}${kws?`<div class="label" style="margin-top:.9rem;margin-bottom:.28rem">Missing Keywords</div><div style="display:flex;flex-wrap:wrap;gap:.28rem">${kws}</div>`:''}<div class="label" style="margin-top:.9rem;margin-bottom:.28rem">Quick Wins</div>${wins}`;
+  show('resume-result');
+}
+function showResumeTab(tab,btn){
+  document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  document.querySelectorAll('.resume-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('rtab-'+tab).classList.add('active');
+}
+
+/* ─── DOWNLOAD PDF ───────────────────────────────────────── */
+function downloadResumeAsPDF(previewId,filename){
+  const text=document.getElementById(previewId).textContent;
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${filename}</title><style>@page{margin:1.8cm 2cm}body{font-family:'Calibri','Segoe UI',Arial,sans-serif;font-size:10.5pt;line-height:1.55;color:#111;max-width:210mm;margin:0 auto;padding:0}pre{font-family:inherit;white-space:pre-wrap;word-break:break-word;margin:0}</style></head><body><pre>${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre><script>window.onload=function(){setTimeout(function(){window.print();},600)}<\/script></body></html>`);
+  win.document.close();
+}
+
+/* ─── CHAT ───────────────────────────────────────────────── */
+let chatHistory=[];
+const CHAT_SYS=`You are 10xThink AI — expert career mentor for ALL domains (tech, medical, finance, law, content creation, government, arts, etc).
+Be DIRECT, SPECIFIC, BRUTALLY HONEST about timelines.
+Give CONCRETE next steps. Recommend alternatives when a path is impractical.
+Know Indian education: JEE, NEET, UPSC, CAT, GATE, IITs, NITs, AIIMS, IIMs, NLUs.
+End responses with 1-2 actions the person can do TODAY.`;
+function quickMsg(text){document.getElementById('chat-input').value=text;sendMsg();}
+async function sendMsg(){
+  const inp=document.getElementById('chat-input');
+  const msg=inp.value.trim();if(!msg) return;
+  inp.value='';inp.style.height='auto';
+  addBubble('user',msg);chatHistory.push({role:'user',content:msg});
+  const typId=addTyping();
+  try{
+    const raw=await callAI(chatHistory,CHAT_SYS,1600);
+    removeEl(typId);addBubble('ai',raw);
+    chatHistory.push({role:'assistant',content:raw});
+    if(chatHistory.length>22) chatHistory=chatHistory.slice(-20);
+  }catch(e){removeEl(typId);addBubble('ai','⚠️ '+e.message);}
+}
+function addBubble(role,text){
+  const msgs=document.getElementById('messages');
+  const div=document.createElement('div');div.className='msg '+role;
+  div.innerHTML=`<div class="bubble">${esc(text)}</div>`;
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function addTyping(){
+  const id='typ-'+Date.now();const msgs=document.getElementById('messages');
+  const div=document.createElement('div');div.id=id;div.className='msg ai';
+  div.innerHTML='<div class="bubble"><div class="typing-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>';
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;return id;
+}
+function removeEl(id){const el=document.getElementById(id);if(el) el.remove();}
+function chatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+document.getElementById('chat-input').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,95)+'px';});
+
+/* ─── UTILS ──────────────────────────────────────────────── */
+function show(id){const el=typeof id==='string'?document.getElementById(id):id;if(el) el.classList.remove('hidden');}
+function hide(id){const el=typeof id==='string'?document.getElementById(id):id;if(el) el.classList.add('hidden');}
+function copyText(id){navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>{const b=event.target;const orig=b.textContent;b.textContent='✅ Copied!';setTimeout(()=>b.textContent=orig,2000);});}
+function downloadTxt(id,filename){const blob=new Blob([document.getElementById(id).textContent],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();}
+
+/* ─── INIT ───────────────────────────────────────────────── */
+(function init(){
+  const d=new Date();d.setMonth(d.getMonth()+3);
+  document.getElementById('exam-date').value=d.toISOString().split('T')[0];
+  renderPapers('all');
+  // Make cursor hoverable on dynamically added elements
+  document.addEventListener('mouseover',e=>{
+    if(e.target.matches('button,a,.feat-card,.proj-card,.idea-card,.paper-card,.stream-btn,.quiz-opt,.topic-btn,.filter-btn,.idea-ai-btn')){
+      cursorEl.classList.add('hovering');cursorRing.classList.add('hovering');
+    }
+  });
+  document.addEventListener('mouseout',e=>{
+    if(e.target.matches('button,a,.feat-card,.proj-card,.idea-card,.paper-card,.stream-btn,.quiz-opt,.topic-btn,.filter-btn,.idea-ai-btn')){
+      cursorEl.classList.remove('hovering');cursorRing.classList.remove('hovering');
+    }
+  });
+})();
+</script>
+</body>
+</html>
