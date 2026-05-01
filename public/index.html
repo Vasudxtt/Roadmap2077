@@ -1693,10 +1693,11 @@ async function extractPDF(file){
 }
 
 /* ──── CURSOR ──── */
-const curEl=document.getElementById('cur');
+const curDot=document.getElementById('cur-dot');
+const curRing=document.getElementById('cur-ring');
 let mx=0,my=0,rx=0,ry=0;
-document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;curEl.style.left=mx+'px';curEl.style.top=my+'px';});
-(function loop(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;document.getElementById('cur-ring').style.left=rx+'px';document.getElementById('cur-ring').style.top=ry+'px';requestAnimationFrame(loop);})();
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;curDot.style.left=mx+'px';curDot.style.top=my+'px';});
+(function loop(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;curRing.style.left=rx+'px';curRing.style.top=ry+'px';requestAnimationFrame(loop);})();
 document.addEventListener('mouseover',e=>{if(e.target.closest('button,a,.feat-card,.proj-card,.idea-card,.paper-card,.stream-btn,.quiz-opt,.topic-btn,.fbtn,.idea-ai,.qt,.sotd-hero'))document.body.classList.add('ch');});
 document.addEventListener('mouseout',e=>{if(e.target.closest('button,a,.feat-card,.proj-card,.idea-card,.paper-card,.stream-btn,.quiz-opt,.topic-btn,.fbtn,.idea-ai,.qt,.sotd-hero'))document.body.classList.remove('ch');});
 document.addEventListener('mousedown',()=>document.body.classList.add('ck'));
