@@ -145,6 +145,7 @@ Pull requests are welcome. For major changes, open an issue first to discuss wha
 MIT © [Vasudxtt](https://github.com/Vasudxtt)
 
 ---
+Open → https://roadmap2077.onrender.com/
 
 <div align="center">
   <strong>Built with ⚡ and Groq AI</strong><br>
