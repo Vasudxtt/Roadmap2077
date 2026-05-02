@@ -1,5 +1,3 @@
-css
-
 /* ══════════════════════════════════════════════════════════
    Roadmap2077 — VOID EDITION
    ONE THEME. ONE VISION. BLACK ONLY.
@@ -563,6 +561,14 @@ body::after {
 
 .pg-title .hi {
     color: var(--acid)
+}
+
+.pg-sub {
+    font-size: .84rem;
+    color: var(--white4);
+    max-width: 420px;
+    line-height: 1.75;
+    margin-bottom: 2rem
 }
 
 /* CARDS */
@@ -1207,13 +1213,10 @@ textarea::placeholder {
     }
 }
 
-/* ── HERO INNER — fix overflow ── */
 .hero-inner {
     position: relative;
     z-index: 1;
-    padding: 4rem 4rem 5rem;
-    /* leave right gap for stats on desktop */
-    max-width: calc(100% - 160px);
+    padding: 4rem 4rem 5rem
 }
 
 .hero-badge {
@@ -1243,17 +1246,13 @@ textarea::placeholder {
     color: var(--acid)
 }
 
-/* ── HERO H1 — clamp so it never overflows ── */
 .hero h1 {
     font-family: 'Syne', sans-serif;
-    font-size: clamp(3.5rem, 10vw, 9.5rem);
+    font-size: clamp(5rem, 12vw, 9.5rem);
     font-weight: 800;
-    line-height: .88;
+    line-height: .84;
     letter-spacing: -.055em;
     margin-bottom: 1.5rem;
-    /* prevent bleed into stats column */
-    word-break: keep-all;
-    overflow-wrap: normal;
 }
 
 .h1-row {
@@ -1334,32 +1333,24 @@ textarea::placeholder {
     }
 }
 
-/* ── HERO STATS — redesigned as bottom row, always visible ── */
+/* Hero stats */
 .hero-stats {
+    position: absolute;
+    right: 3rem;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
-    flex-direction: row;
-    gap: 0;
-    border-top: 1px solid var(--line);
-    /* sits above ticker */
-    margin-bottom: 38px;
-    background: rgba(0,0,0,.4);
-    backdrop-filter: blur(10px);
+    flex-direction: column;
+    gap: .8rem;
 }
 
 .h-stat {
-    flex: 1;
-    text-align: center;
-    padding: .7rem .5rem;
-    border-right: 1px solid var(--line);
-}
-
-.h-stat:last-child {
-    border-right: none;
+    text-align: right;
 }
 
 .h-stat-num {
     font-family: 'Syne', sans-serif;
-    font-size: clamp(1.4rem, 3.5vw, 2rem);
+    font-size: 2rem;
     font-weight: 800;
     color: var(--acid);
     line-height: 1;
@@ -1368,11 +1359,10 @@ textarea::placeholder {
 
 .h-stat-lbl {
     font-family: 'Space Mono', monospace;
-    font-size: .46rem;
-    color: var(--white4);
+    font-size: .5rem;
+    color: var(--white5);
     text-transform: uppercase;
     letter-spacing: .1em;
-    margin-top: 2px;
 }
 
 /* ── FEATURE CARDS ── */
@@ -3046,14 +3036,8 @@ textarea::placeholder {
         border-bottom: 1px solid var(--line)
     }
 
-    /* stats become a row on mid screens */
-    .hero-inner {
-        max-width: 100%;
-        padding: 3rem 2.5rem 4.5rem;
-    }
-
-    .hero h1 {
-        font-size: clamp(3rem, 8vw, 6rem);
+    .hero-stats {
+        display: none
     }
 }
 
@@ -3080,12 +3064,7 @@ textarea::placeholder {
     }
 
     .hero-inner {
-        padding: 1.6rem 1.2rem 4rem;
-        max-width: 100%;
-    }
-
-    .hero h1 {
-        font-size: clamp(2.8rem, 14vw, 5rem);
+        padding: 1.8rem 1.5rem 4rem
     }
 
     .topbar {
@@ -3112,32 +3091,6 @@ textarea::placeholder {
     .chat-box {
         height: 500px
     }
-
-    /* stats: 2×2 grid on mobile */
-    .hero-stats {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        margin-bottom: 38px;
-    }
-
-    .h-stat {
-        border-right: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
-    }
-
-    .h-stat:nth-child(2),
-    .h-stat:nth-child(4) {
-        border-right: none;
-    }
-
-    .h-stat:nth-child(3),
-    .h-stat:nth-child(4) {
-        border-bottom: none;
-    }
-
-    .h-stat-num {
-        font-size: 1.5rem;
-    }
 }
 
 @media(max-width:480px) {
@@ -3149,18 +3102,10 @@ textarea::placeholder {
     }
 
     .hero h1 {
-        font-size: clamp(2.4rem, 16vw, 4rem);
+        font-size: 3.5rem
     }
 
     .sotd-name {
         font-size: 1.8rem
-    }
-
-    .hero-stats {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .h-stat-num {
-        font-size: 1.3rem;
     }
 }
