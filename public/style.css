@@ -3210,3 +3210,13 @@ textarea::placeholder {
         letter-spacing: -.03em;
     }
 }
+/* ── Hide custom cursor on touch/mobile devices ── */
+@media (hover: none) and (pointer: coarse) {
+    #cur { display: none !important; }
+    body { cursor: auto !important; }
+    button, a, .ni, .feat-card, .proj-card, .idea-card,
+    .paper-card, .stream-btn, .topic-btn, .qt, .fbtn,
+    .btn, .send-btn, .pm-close, .quiz-opt {
+        cursor: pointer !important;
+    }
+}
