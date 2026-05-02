@@ -1,3 +1,5 @@
+require('dotenv').config();
+const Groq    = require('groq-sdk');
 const express = require('express');
 const path    = require('path');
 
@@ -28,7 +30,7 @@ app.post('/api/ai', async (req, res) => {
     groqMessages.push(...messages);
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
       body: JSON.stringify({ model: GROQ_MODEL, messages: groqMessages, max_tokens: max_tokens || 1400, temperature: 0.7 }),
     });
     const data = await response.json();
