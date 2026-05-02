@@ -3109,3 +3109,104 @@ textarea::placeholder {
         font-size: 1.8rem
     }
 }
+/* ═══════════════════════════════════════════════════════════
+   HERO RESPONSIVE FIX
+   Paste this at the END of your style.css
+   Fixes: h1 text overflow + stats visible on all screen sizes
+═══════════════════════════════════════════════════════════ */
+
+/* ── Hero h1: tighter scale + no clipping ── */
+.hero h1 {
+    font-size: clamp(2.6rem, 10vw, 9.5rem);
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* ── Desktop stats panel: add backdrop so numbers don't bleed into text ── */
+.hero-stats {
+    z-index: 2;
+    padding: 1rem .75rem;
+    background: linear-gradient(to left, rgba(0,0,0,.65) 0%, transparent 100%);
+    border-radius: var(--r4);
+}
+
+/* ── Inline stats strip (inside hero-inner, below hero-sub) ──
+   Hidden on desktop, revealed ≤1100px                         */
+.hero-stats-inline {
+    display: none;
+    gap: .5rem;
+    margin-bottom: 1.4rem;
+    padding: .8rem 0;
+    border-top: 1px solid var(--line2);
+    border-bottom: 1px solid var(--line2);
+}
+
+.hero-stats-inline .h-stat { text-align: left; }
+
+.hero-stats-inline .h-stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--acid);
+    line-height: 1;
+    letter-spacing: -.04em;
+}
+
+.hero-stats-inline .h-stat-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: .44rem;
+    color: var(--white4);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    margin-top: 3px;
+}
+
+/* ══ BREAKPOINTS ══ */
+
+@media (max-width: 1100px) {
+    /* Hide absolute right-panel stats */
+    .hero-stats { display: none !important; }
+
+    /* Show inline strip as 4-col flex row */
+    .hero-stats-inline {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .hero h1 {
+        font-size: clamp(3rem, 9vw, 7rem);
+    }
+
+    .hero-inner {
+        padding: 3rem 3rem 5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: clamp(2.4rem, 11.5vw, 4.6rem);
+        letter-spacing: -.04em;
+        line-height: .9;
+    }
+
+    .hero-inner {
+        padding: 1.6rem 1.2rem 4rem;
+    }
+
+    /* 2×2 grid on mobile */
+    .hero-stats-inline {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .7rem .5rem;
+    }
+
+    .hero-stats-inline .h-stat-num { font-size: 1.15rem; }
+}
+
+@media (max-width: 400px) {
+    .hero h1 {
+        font-size: 2.1rem;
+        letter-spacing: -.03em;
+    }
+}
