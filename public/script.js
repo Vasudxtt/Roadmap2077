@@ -638,4 +638,3 @@ End responses with 1-2 actions the person can do TODAY.`;
       document.getElementById('exam-date').value = d.toISOString().split('T')[0];
       renderPapers('all');
     })();
-  </script>
