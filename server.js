@@ -31,7 +31,7 @@ app.post('/api/ai', async (req, res) => {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({ model: GROQ_MODEL, messages: groqMessages, max_tokens: max_tokens || 1400, temperature: 0.7 }),
+      body: JSON.stringify({ model: GROQ_MODEL, messages: groqMessages, max_tokens: Math.min(max_tokens || 1400, 3000), temperature: 0.7 }),
     });
     const data = await response.json();
     if (!response.ok) return res.status(response.status).json({ error: data?.error?.message || `Groq error ${response.status}` });
