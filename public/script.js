@@ -69,8 +69,46 @@ async function callAI(messages, system, maxTokens = 1400) {
     if (!t) throw new Error('Empty response from AI');
     return t;
 }
-function parseJ(raw) { let c = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim(); const s = c.indexOf('{'), e = c.lastIndexOf('}'); if (s >= 0 && e >= 0) c = c.slice(s, e + 1); return JSON.parse(c); }
-function parseJA(raw) { let c = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim(); const s = c.indexOf('['), e = c.lastIndexOf(']'); if (s >= 0 && e >= 0) c = c.slice(s, e + 1); return JSON.parse(c); }
+
+/* ──── JSON HELPERS (robust) ──── */
+function fixJSON(str) {
+    return str
+        .replace(/,\s*([}\]])/g, '$1');
+}
+function closeJSON(str) {
+    let opens = [];
+    let inStr = false;
+    let escape = false;
+    for (let i = 0; i < str.length; i++) {
+        const ch = str[i];
+        if (escape) { escape = false; continue; }
+        if (ch === '\\' && inStr) { escape = true; continue; }
+        if (ch === '"') { inStr = !inStr; continue; }
+        if (inStr) continue;
+        if (ch === '{' || ch === '[') opens.push(ch);
+        if (ch === '}' || ch === ']') opens.pop();
+    }
+    str = str.replace(/,\s*$/, '');
+    for (let i = opens.length - 1; i >= 0; i--) {
+        str += opens[i] === '{' ? '}' : ']';
+    }
+    return str;
+}
+function parseJ(raw) {
+    let c = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const s = c.indexOf('{'), e = c.lastIndexOf('}');
+    if (s >= 0 && e >= 0) c = c.slice(s, e + 1);
+    c = fixJSON(c);
+    try { return JSON.parse(c); } catch (err) { c = closeJSON(c); return JSON.parse(c); }
+}
+function parseJA(raw) {
+    let c = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const s = c.indexOf('['), e = c.lastIndexOf(']');
+    if (s >= 0 && e >= 0) c = c.slice(s, e + 1);
+    c = fixJSON(c);
+    try { return JSON.parse(c); } catch (err) { c = closeJSON(c); return JSON.parse(c); }
+}
+
 function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function show(id) { const el = typeof id === 'string' ? document.getElementById(id) : id; if (el) el.classList.remove('hidden'); }
 function hide(id) { const el = typeof id === 'string' ? document.getElementById(id) : id; if (el) el.classList.add('hidden'); }
@@ -91,7 +129,7 @@ Output ONLY valid JSON:
 {"title":"Roadmap: <title>","duration":"<total>","timeline_note":"<warning if unrealistic, else empty>","steps":[{"num":1,"title":"<step>","desc":"<2-3 sentences>","skills":["s1","s2"],"time":"<e.g. 2-3 weeks>","project":"<hands-on task or empty>","video_resource":"<YouTube search query>","resources":"<best resource name>"}]}
 Include 8-12 steps. Be specific and realistic.`;
     try {
-        const raw = await callAI([{ role: 'user', content: prompt }], 'Expert career coach. Output ONLY valid JSON.', 1600);
+        const raw = await callAI([{ role: 'user', content: prompt }], 'Expert career coach. Output ONLY valid JSON.', 2000);
         const data = parseJ(raw);
         rmSteps = data.steps || []; rmDone = new Set();
         document.getElementById('rm-title').textContent = data.title || career;
@@ -152,7 +190,7 @@ async function finishQuiz() {
 Recommend best Indian Class 11-12 stream. Output ONLY valid JSON:
 {"recommended_stream":"PCM/PCB/PCMB/Commerce/Arts","reasoning":"<2 sentences>","top_careers":["c1","c2","c3"],"title":"<path>","duration":"<Class 11 to job>","daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"<Subject>","icon":"<emoji>","chapters":[{"title":"<ch>","priority":"high|medium|low","weeks":"2 weeks"}],"practice_strategy":"<1 sentence>"}],"steps":[{"num":1,"title":"...","desc":"...","skills":["s1"],"time":"...","resources":"..."}]}
 3-4 subjects, 6-8 steps.`;
-    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid JSON.', 1600); renderStuResult(parseJ(raw), true); }
+    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid JSON.', 2000); renderStuResult(parseJ(raw), true); }
     catch (e) { hide('stu-loading'); const r = document.getElementById('stu-result'); r.innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`; r.classList.remove('hidden'); }
 }
 async function buildStream(stream) {
@@ -160,7 +198,7 @@ async function buildStream(stream) {
     const prompt = `Generate Class 11-12 ${labels[stream]} roadmap for India. Output ONLY valid JSON:
 {"title":"<path>","duration":"<Class 11 to job>","exam_options":["e1","e2","e3"],"top_careers":["c1","c2"],"daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"<Subject>","icon":"<emoji>","chapters":[{"title":"<ch>","priority":"high|medium|low","weeks":"2 weeks"}],"practice_strategy":"<1 sentence>"}],"steps":[{"num":1,"title":"...","desc":"...","skills":["s1"],"time":"...","resources":"..."}]}
 All main subjects, 5-7 chapters each, 8-10 steps.`;
-    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid JSON.', 1600); renderStuResult(parseJ(raw), false); }
+    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid JSON.', 2000); renderStuResult(parseJ(raw), false); }
     catch (e) { hide('stu-loading'); const r = document.getElementById('stu-result'); r.innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`; r.classList.remove('hidden'); }
 }
 function renderStuResult(data, isQuiz) {
@@ -191,7 +229,7 @@ async function generateExamPlan() {
 Be BRUTALLY HONEST. Output ONLY valid JSON:
 {"exam":"${exam}","days_left":${daysLeft},"verdict":"<2 sentence honest assessment>","target":"<realistic score>","alert":"<warning if < 30 days, else empty>","subject_breakdown":[{"subject":"<s>","icon":"<e>","weightage":"40%","topics":[{"topic":"<t>","subtopics":["st1","st2"],"days":"<days>","priority":"high|medium|low"}],"revision_cycles":2,"practice_tests":"<e.g. 3 mocks>"}],"weekly_blocks":[{"week":"Week 1-2","focus":"<topic>","intensity":"light|moderate|intense|brutal","daily":[{"day":"Mon-Tue","plan":"<plan>"},{"day":"Wed-Thu","plan":"<plan>"},{"day":"Fri-Sat","plan":"<plan>"},{"day":"Sun","plan":"Revision + Mock"}]}],"revision_plan":"<2 sentences>","weak_area_focus":"<advice>","tips":["t1","t2","t3"]}
 3-4 subjects, 3-5 weekly blocks.`;
-    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Brutally honest exam strategist. Output ONLY valid JSON.', 1800); renderExamPlan(parseJ(raw)); }
+    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Brutally honest exam strategist. Output ONLY valid JSON.', 2000); renderExamPlan(parseJ(raw)); }
     catch (e) { hide('ep-loading'); document.getElementById('ep-result').innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`; show('ep-result'); }
 }
 function renderExamPlan(d) {
