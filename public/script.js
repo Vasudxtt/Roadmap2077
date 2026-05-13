@@ -591,8 +591,26 @@ function renderIdeas(filter) {
     }).join('');
 }
 function ideaCard(p, lc) {
-    const st = p.title.replace(/'/g, "&#39;"); const sd = p.desc.replace(/'/g, "&#39;");
-    return `<div class="idea-card"><div class="idea-hd"><span class="idea-lv ${lc[p.level]}">${p.level}</span><span class="idea-type">${esc(p.type)}</span></div><div class="idea-title">${esc(p.title)}</div><div class="idea-desc">${esc(p.desc)}</div><div class="idea-tech">${(p.tech || []).map(t => `<span>${esc(t)}</span>`).join('')}</div><div class="idea-foot"><div class="idea-count">👥 ${p.started >= 1000 ? (p.started / 1000).toFixed(1) + 'k' : p.started}</div><button class="idea-ai" onclick="event.stopPropagation();openPG('${st}','${sd}',${JSON.stringify(p.tech)},'${p.cat}','${p.level}')">✦ Ask AI</button></div></div>`;
+    const st = p.title.replace(/'/g, "\\'"); 
+    const sd = p.desc.replace(/'/g, "\\'");
+    const techStr = JSON.stringify(p.tech || []);
+    
+    return `<div class="idea-card">
+        <div class="idea-hd">
+            <span class="idea-lv ${lc[p.level]}">${p.level}</span>
+            <span class="idea-type">${esc(p.type)}</span>
+        </div>
+        <div class="idea-title">${esc(p.title)}</div>
+        <div class="idea-desc">${esc(p.desc)}</div>
+        <div class="idea-tech">${(p.tech || []).map(t => `<span>${esc(t)}</span>`).join('')}</div>
+        <div class="idea-foot">
+            <div class="idea-count">👥 ${p.started >= 1000 ? (p.started / 1000).toFixed(1) + 'k' : p.started}</div>
+            <button class="idea-ai" 
+                onclick="event.stopPropagation(); openPG('${st}', '${sd}', ${techStr}, '${p.cat}', '${p.level}')">
+                ✦ Ask AI
+            </button>
+        </div>
+    </div>`;
 }
 
 /* ──── RESUME FILE HANDLING ──── */
