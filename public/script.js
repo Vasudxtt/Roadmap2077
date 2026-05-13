@@ -386,77 +386,78 @@ const BUILD_IDEAS = [
 ];
 let pgTitle = '', pgData = null;
 /* ──── PROJECT AI GUIDE ──── */
+/* ──── PROJECT AI GUIDE ──── */
 async function openPG(title, desc, tech, cat, level) {
-    console.log('openPG called with:', title);
+    console.log('✅ openPG called for:', title);
 
     pgTitle = title;
-    pgData = { title, desc, tech, cat, level };
+    pgData = { title, desc, tech: tech || [], cat, level };
 
+    // Show modal
     const overlay = document.getElementById('pg-overlay');
     if (!overlay) {
-        alert("Modal HTML not found!");
+        alert("❌ Modal not found. Check HTML for #pg-overlay");
         return;
     }
 
+    overlay.style.display = 'flex';
+    
     document.getElementById('pg-title-m').textContent = title;
-    document.getElementById('pg-meta-m').textContent = `${level} · ${cat} · ${tech.join(', ')}`;
+    document.getElementById('pg-meta-m').textContent = `${level} · ${cat} · ${(tech || []).join(', ')}`;
 
     hide('pg-content-m');
     const loading = document.getElementById('pg-loading-m');
-    loading.style.display = 'flex';
+    if (loading) loading.style.display = 'flex';
 
     const textEl = document.getElementById('pg-text-m');
-    textEl.innerHTML = '';
+    if (textEl) textEl.innerHTML = '';
 
-    const prompt = `You are an expert coding mentor.
-
-Create a detailed build guide for this project:
+    const prompt = `Create a practical project build guide:
 
 Project: ${title}
 Description: ${desc}
-Tech: ${tech.join(', ')}
-Category: ${cat}
+Tech: ${(tech || []).join(', ')}
 Level: ${level}
 
-Use this exact Markdown structure:
+Use this structure:
 
 # ${title}
 
 ## Overview
-2-3 sentences explaining the project.
+2-3 sentences.
 
 ## Tech Stack & Setup
-- Technologies used
-- Step-by-step setup instructions
+Installation steps.
 
-## Step-by-Step Implementation
-Numbered steps with code examples.
+## Step-by-Step Guide
+1. ...
+2. ...
 
-## Key Concepts to Learn
-- Important concepts
+## Key Concepts
+- Bullet list
 
-## Bonus Features
-3-4 ideas to take it further.
-
-Keep it practical and encouraging.`;
+## Bonus Ideas
+3-4 ways to improve it.`;
 
     try {
         const raw = await callAI([{ role: 'user', content: prompt }], 
-            'Expert coding mentor. Output clean Markdown.', 2200);
+            'Expert coding mentor. Output clean Markdown.', 2000);
         
-        textEl.innerHTML = raw.replace(/\n/g, '<br><br>');
+        if (textEl) textEl.innerHTML = raw.replace(/\n/g, '<br>');
+        
         hide('pg-loading-m');
         show('pg-content-m');
-        
     } catch (e) {
         console.error(e);
+        if (textEl) textEl.innerHTML = `<div style="color:var(--red);padding:20px">Error: ${esc(e.message)}</div>`;
         hide('pg-loading-m');
-        textEl.innerHTML = `<div style="color:var(--red);padding:1.5rem">❌ ${esc(e.message)}</div>`;
         show('pg-content-m');
     }
 }
 
+// Make sure it's accessible from inline onclick
 window.openPG = openPG;
+
 function extractSteps(text) {
     const steps = [];
     const matches = text.match(/\*\*Step \d+:([^*]+)\*\*\n([^*]+)/g) || [];
