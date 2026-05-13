@@ -360,16 +360,20 @@ const AWW_SITES = [
     { id: 3, name: 'Linear', country: '🇺🇸', cat: 'SaaS · Project Management', url: 'https://linear.app', img: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=900&q=90', design: 9.8, usability: 9.9, creativity: 9.6, tags: ['Dark', 'Minimal', 'Motion'], award: 'SOTD', why: 'Sets the global benchmark for dark-mode SaaS UI with 60fps micro-interactions' },
     { id: 4, name: 'Apple Vision Pro', country: '🇺🇸', cat: 'Product · Cinematic Scroll', url: 'https://apple.com/vision-pro', img: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=900&q=90', design: 10.0, usability: 9.7, creativity: 9.8, tags: ['Scroll', '3D', 'Video'], award: 'SOTM', why: 'Cinematic scroll storytelling that feels like watching a blockbuster film' },
     { id: 5, name: 'Stripe', country: '🇺🇸', cat: 'FinTech · Developer Platform', url: 'https://stripe.com', img: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=900&q=90', design: 9.7, usability: 9.9, creativity: 9.5, tags: ['Gradient', 'Docs'], award: 'SOTD', why: 'The standard for developer-first marketing sites — beautiful yet functional' },
-    { id: 6, name: 'Refik Anadol', country: '🇹🇷', cat: 'AI Data Art · Machine Aesthetics', url: 'https://refikanadol.com', img: 'https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=900&q=90', design: 9.9, usability: 9.2, creativity: 10.0, tags: ['AI Art', 'Generative'], award: 'SOTD', why: 'AI-generated data sculptures in MoMA — where ML becomes fine art' },
-    { id: 7, name: 'Obys Agency', country: '🇺🇦', cat: 'Creative Agency · Typography', url: 'https://obys.agency', img: 'https://images.unsplash.com/photo-1542744094-3a31f272c490?w=900&q=90', design: 9.9, usability: 9.2, creativity: 10.0, tags: ['Typography', 'Bold'], award: 'SOTD', why: 'Made hover-reveal typography a global design trend — 10+ Awwwards' },
-    { id: 8, name: 'Basement Studio', country: '🇦🇷', cat: 'Creative Agency · Brutalist', url: 'https://basement.studio', img: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=900&q=90', design: 9.8, usability: 9.3, creativity: 9.9, tags: ['Glitch', 'Brutalist'], award: 'SOTD', why: 'Brutalist-meets-modern — their glitch effect became iconic worldwide' },
-    { id: 9, name: 'The Pudding', country: '🇺🇸', cat: 'Data Journalism · Scrollytelling', url: 'https://pudding.cool', img: 'https://images.unsplash.com/photo-1504354949085-aa9ac8c3d7c8?w=900&q=90', design: 9.8, usability: 9.7, creativity: 10.0, tags: ['Data', 'Essays'], award: 'SOTM', why: 'Reinvented long-form journalism with interactive data scrollytelling' },
-    { id: 10, name: 'Nothing Tech', country: '🇬🇧', cat: 'Consumer Electronics · Dot Matrix', url: 'https://nothing.tech', img: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=900&q=90', design: 9.9, usability: 9.7, creativity: 9.9, tags: ['Dot Matrix', 'Minimal'], award: 'SOTM', why: 'Iconic dot-matrix language translated perfectly to web — typographic art' },
-    { id: 11, name: 'Rive', country: '🇬🇧', cat: 'Interactive Animation Tool', url: 'https://rive.app', img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=900&q=90', design: 9.9, usability: 9.5, creativity: 9.9, tags: ['Animation', 'State Machine'], award: 'SOTD', why: 'State machine animations in browser — permanently changed how apps feel' },
-    { id: 12, name: 'Framer', country: '🇳🇱', cat: 'Visual Web Design · No-Code', url: 'https://framer.com', img: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=900&q=90', design: 9.7, usability: 9.6, creativity: 9.8, tags: ['No-Code', 'Design'], award: 'SOTD', why: 'Made professional web design accessible to every designer without code' },
-    { id: 13, name: 'Vercel', country: '🇺🇸', cat: 'Frontend Cloud · Dev Experience', url: 'https://vercel.com', img: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=900&q=90', design: 9.6, usability: 9.8, creativity: 9.7, tags: ['Dark', 'Developer'], award: 'SOTD', why: 'Frosted-glass aesthetics meet developer-first UX — new standard for dev tools' },
-    { id: 14, name: 'Raycast', country: '🇬🇧', cat: 'Productivity App · macOS', url: 'https://raycast.com', img: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=900&q=90', design: 9.8, usability: 9.8, creativity: 9.6, tags: ['macOS', 'Dark'], award: 'SOTD', why: 'Turned a utility launcher into a design icon — proves utility can be beautiful' },
-    { id: 15, name: 'Arc Browser', country: '🇺🇸', cat: 'Web Browser · Reimagined UX', url: 'https://arc.net', img: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=900&q=90', design: 9.9, usability: 9.6, creativity: 9.9, tags: ['Browser', 'Bold'], award: 'SOTD', why: 'Completely reimagined the browser — both app and landing page win awards' },
+    { id: 6, name: 'Zenly', country: '🇫🇷', cat: 'App Landing · Social Maps', url: 'https://zen.ly', img: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=900&q=90', design: 9.9, usability: 9.4, creativity: 9.9, tags: ['3D', 'Playful', 'App'], award: 'SOTD', why: 'Joyful 3D characters and bubbly interactions that sparked a design era' },
+    { id: 7, name: 'Resn', country: '🇳🇿', cat: 'Creative Agency · Experimental', url: 'https://resn.co.nz', img: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=900&q=90', design: 9.8, usability: 9.0, creativity: 10.0, tags: ['Experimental', 'WebGL'], award: 'SOTD', why: 'Perpetually experimental — each project reinvents browser capabilities' },
+    { id: 8, name: 'Active Theory', country: '🇺🇸', cat: 'Creative Studio · Immersive', url: 'https://activetheory.net', img: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=900&q=90', design: 9.9, usability: 9.3, creativity: 10.0, tags: ['Immersive', 'WebGL'], award: 'SOTD', why: 'Award-winning immersive digital experiences for the world\'s biggest brands' },
+    { id: 9, name: 'Pentagram', country: '🇬🇧', cat: 'Design Firm · Editorial', url: 'https://pentagram.com', img: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=900&q=90', design: 9.7, usability: 9.5, creativity: 9.8, tags: ['Typography', 'Editorial'], award: 'SOTM', why: 'World\'s largest independent design consultancy — a typographic masterpiece' },
+    { id: 10, name: 'Refik Anadol', country: '🇹🇷', cat: 'AI Data Art · Machine Aesthetics', url: 'https://refikanadol.com', img: 'https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=900&q=90', design: 9.9, usability: 9.2, creativity: 10.0, tags: ['AI Art', 'Generative'], award: 'SOTD', why: 'AI-generated data sculptures in MoMA — where ML becomes fine art' },
+    { id: 11, name: 'Obys Agency', country: '🇺🇦', cat: 'Creative Agency · Typography', url: 'https://obys.agency', img: 'https://images.unsplash.com/photo-1542744094-3a31f272c490?w=900&q=90', design: 9.9, usability: 9.2, creativity: 10.0, tags: ['Typography', 'Bold'], award: 'SOTD', why: 'Made hover-reveal typography a global design trend — 10+ Awwwards' },
+    { id: 12, name: 'Basement Studio', country: '🇦🇷', cat: 'Creative Agency · Brutalist', url: 'https://basement.studio', img: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=900&q=90', design: 9.8, usability: 9.3, creativity: 9.9, tags: ['Glitch', 'Brutalist'], award: 'SOTD', why: 'Brutalist-meets-modern — their glitch effect became iconic worldwide' },
+    { id: 13, name: 'The Pudding', country: '🇺🇸', cat: 'Data Journalism · Scrollytelling', url: 'https://pudding.cool', img: 'https://images.unsplash.com/photo-1504354949085-aa9ac8c3d7c8?w=900&q=90', design: 9.8, usability: 9.7, creativity: 10.0, tags: ['Data', 'Essays'], award: 'SOTM', why: 'Reinvented long-form journalism with interactive data scrollytelling' },
+    { id: 14, name: 'Nothing Tech', country: '🇬🇧', cat: 'Consumer Electronics · Dot Matrix', url: 'https://nothing.tech', img: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=900&q=90', design: 9.9, usability: 9.7, creativity: 9.9, tags: ['Dot Matrix', 'Minimal'], award: 'SOTM', why: 'Iconic dot-matrix language translated perfectly to web — typographic art' },
+    { id: 15, name: 'Rive', country: '🇬🇧', cat: 'Interactive Animation Tool', url: 'https://rive.app', img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=900&q=90', design: 9.9, usability: 9.5, creativity: 9.9, tags: ['Animation', 'State Machine'], award: 'SOTD', why: 'State machine animations in browser — permanently changed how apps feel' },
+    { id: 16, name: 'Framer', country: '🇳🇱', cat: 'Visual Web Design · No-Code', url: 'https://framer.com', img: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=900&q=90', design: 9.7, usability: 9.6, creativity: 9.8, tags: ['No-Code', 'Design'], award: 'SOTD', why: 'Made professional web design accessible to every designer without code' },
+    { id: 17, name: 'Vercel', country: '🇺🇸', cat: 'Frontend Cloud · Dev Experience', url: 'https://vercel.com', img: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=900&q=90', design: 9.6, usability: 9.8, creativity: 9.7, tags: ['Dark', 'Developer'], award: 'SOTD', why: 'Frosted-glass aesthetics meet developer-first UX — new standard for dev tools' },
+    { id: 18, name: 'Raycast', country: '🇬🇧', cat: 'Productivity App · macOS', url: 'https://raycast.com', img: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=900&q=90', design: 9.8, usability: 9.8, creativity: 9.6, tags: ['macOS', 'Dark'], award: 'SOTD', why: 'Turned a utility launcher into a design icon — proves utility can be beautiful' },
+    { id: 19, name: 'Arc Browser', country: '🇺🇸', cat: 'Web Browser · Reimagined UX', url: 'https://arc.net', img: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=900&q=90', design: 9.9, usability: 9.6, creativity: 9.9, tags: ['Browser', 'Bold'], award: 'SOTD', why: 'Completely reimagined the browser — both app and landing page win awards' },
 ];
 async function loadProjects(force) {
     if (allSites.length && !force) { renderSites('all'); return; }
@@ -494,17 +498,60 @@ async function handleGenFile(e) {
         else { st.textContent = '⚠️ Could not extract.'; genBase = `Uploaded: ${file.name}`; }
     } else { const r = new FileReader(); r.onload = ev => { genBase = ev.target.result; st.textContent = '✅ Loaded'; }; r.readAsText(file); }
 }
+
+/* ──── GITHUB FETCH (with direct browser fallback for rate limit) ──── */
+async function ghResumeFetch(username) {
+    // Try server first
+    try {
+        const res = await fetch('/api/github/auto-resume', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+        if (res.status === 429 || (data && data.rateLimited)) throw new Error('rate_limited');
+        if (!res.ok) throw new Error(data.error || 'Server error');
+        return data;
+    } catch (serverErr) {
+        // Fallback: call GitHub API directly from browser
+        console.warn('[GitHub] Server fallback triggered:', serverErr.message);
+        const [profileRes, reposRes] = await Promise.all([
+            fetch(`https://api.github.com/users/${encodeURIComponent(username)}`),
+            fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=50`)
+        ]);
+        if (profileRes.status === 403 || reposRes.status === 403) {
+            throw new Error('GitHub API rate limit exceeded on your network too. Please add GITHUB_TOKEN to your .env — get a free token at github.com/settings/tokens (no scopes needed).');
+        }
+        if (!profileRes.ok) throw new Error(`GitHub user "@${username}" not found.`);
+        const profile = await profileRes.json();
+        const raw = await reposRes.json();
+        const repos = Array.isArray(raw)
+            ? raw.filter(r => !r.fork).slice(0, 30).map(r => ({
+                name: r.name, language: r.language || 'Unknown',
+                stars: r.stargazers_count || 0, description: r.description || '',
+                updated: r.updated_at, topics: r.topics || [], url: r.html_url
+            }))
+            : [];
+        return { profile, repos };
+    }
+}
+
 async function fetchGenGH() {
     const u = document.getElementById('gen-gh-user').value.trim(); if (!u) return;
     const st = document.getElementById('gen-gh-status'); show(st); st.textContent = '⏳ Fetching GitHub repos…';
     try {
-        const res = await fetch('/api/github/auto-resume', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u }) });
-        const data = await res.json(); if (!res.ok) throw new Error(data.error || 'Failed');
-        genGH = data; st.textContent = `✅ @${u}: ${data.repos.length} repos found`;
+        const data = await ghResumeFetch(u);
+        genGH = data;
+        st.textContent = `✅ @${u}: ${data.repos.length} repos found`;
+        st.style.color = '';
         const c = document.getElementById('gen-sel-repos'); show(c);
         c.innerHTML = `<div class="text-xs text-w4 mb-sm">Repos (AI will pick best for your JD):</div>` + data.repos.slice(0, 8).map(r => `<span class="repo-chip">⭐${r.stars} ${esc(r.name)}</span>`).join('');
-    } catch (err) { st.textContent = `⚠️ ${err.message}`; }
+    } catch (err) {
+        st.textContent = `⚠️ ${err.message}`;
+        st.style.color = 'var(--red)';
+    }
 }
+
 async function generateSmart() {
     const jd = document.getElementById('gen-jd').value.trim();
     const exp = document.getElementById('gen-exp').value;
@@ -544,9 +591,7 @@ async function generateGHResume() {
     renderGHSteps(steps, 0);
     try {
         document.getElementById('gh-ltxt').textContent = 'Fetching GitHub data…';
-        const res = await fetch('/api/github/auto-resume', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, jd, exp }) });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'GitHub fetch failed');
+        const data = await ghResumeFetch(username);
         const { profile, repos } = data;
         const pArea = document.getElementById('gh-profile-area');
         pArea.innerHTML = `<div class="gh-banner"><img class="gh-avatar" src="${profile.avatar_url}" alt="avatar" onerror="this.style.display='none'"><div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:.83rem">${esc(profile.name || profile.login)}</div><div class="text-xs text-w4">@${esc(profile.login)} · ${profile.public_repos} repos · ${profile.followers || 0} followers</div>${profile.bio ? `<div class="text-xs text-w4">${esc(profile.bio)}</div>` : ''}</div></div>`;
