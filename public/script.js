@@ -61,8 +61,13 @@ document.addEventListener('click', e => { if (!e.target.closest('.ac-wrap')) doc
 function setC(v) { document.getElementById('career-input').value = v; document.getElementById('ac-list').classList.add('hidden'); }
 
 /* ──── AI CALL (proxied via /api/ai from server.js) ──── */
-async function callAI(messages, system, maxTokens = 1400) {
-    const res = await fetch('/api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages, system, max_tokens: maxTokens }) });
+// use_smart_model=true forces llama-3.3-70b on the server (for student path JSON)
+async function callAI(messages, system, maxTokens = 1400, useSmartModel = false) {
+    const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages, system, max_tokens: maxTokens, use_smart_model: useSmartModel })
+    });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
     const t = data?.content?.[0]?.text ?? data?.text ?? '';
@@ -130,6 +135,16 @@ const QUIZ = [
     { q: 'Which career appeals most?', opts: ['IIT → Engineer', 'AIIMS → Doctor', 'IIM → Manager', 'NID → Designer/Writer', 'Startup → Developer'] }
 ];
 let qIdx = 0, qAns = [];
+
+// ── Stream metadata: correct career goals & exams per stream ──
+const STREAM_META = {
+    pcm:      { goal: 'Engineering / Tech / Research',         exams: 'JEE Main · JEE Advanced · BITSAT · VITEEE' },
+    pcb:      { goal: 'Medicine / MBBS / Healthcare',          exams: 'NEET UG · AIIMS · JIPMER · NEET PG later' },
+    pcmb:     { goal: 'Medicine or Engineering (keep both options open)', exams: 'NEET UG + JEE Main' },
+    commerce: { goal: 'Business / Finance / CA / MBA / Banking', exams: 'CA Foundation · CUET · CAT · CLAT · CFA' },
+    arts:     { goal: 'Law / Journalism / Civil Services / Design / Teaching', exams: 'CLAT · UPSC · NID · NIFT · CUET' },
+};
+
 function selStream(s, btn) {
     document.querySelectorAll('.stream-btn').forEach(b => b.classList.remove('sel')); btn.classList.add('sel');
     hide('stu-ph'); hide('quiz-panel'); hide('stu-loading');
@@ -147,37 +162,123 @@ function renderQuiz() {
 }
 function ansQ(i, v) { qAns.push(v); qIdx++; renderQuiz(); }
 
-/* ──── FIXED: finishQuiz — reduced prompt size to prevent JSON truncation ──── */
+/* ──── finishQuiz: smaller prompt + smart model ──── */
 async function finishQuiz() {
     hide('quiz-panel'); show('stu-loading');
-    const prompt = `Student quiz answers: ${qAns.join(' | ')}
-Recommend best Indian Class 11-12 stream. Output ONLY valid compact JSON, no extra text:
-{"recommended_stream":"PCM","reasoning":"2 sentences max.","top_careers":["c1","c2","c3"],"title":"path title","duration":"Class 11 to first job","daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"Subject","icon":"📖","chapters":[{"title":"Chapter","priority":"high","weeks":"2 weeks"},{"title":"Chapter","priority":"medium","weeks":"2 weeks"},{"title":"Chapter","priority":"low","weeks":"1 week"}],"practice_strategy":"One sentence."}],"steps":[{"num":1,"title":"Step","desc":"One sentence.","skills":["s1","s2"],"time":"2 weeks","resources":"Resource name"}]}
-Return exactly 3 subjects, exactly 6 steps. Keep ALL string values SHORT (under 60 chars).`;
-    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid compact JSON. No markdown. No extra text. Keep all string values short.', 2800); renderStuResult(parseJ(raw), true); }
-    catch (e) { hide('stu-loading'); const r = document.getElementById('stu-result'); r.innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`; r.classList.remove('hidden'); }
+    const prompt = `Indian student quiz answers: ${qAns.join(' | ')}
+Pick the best Class 11-12 stream (PCM/PCB/PCMB/Commerce/Arts).
+Output ONLY compact JSON, zero extra text:
+{"recommended_stream":"PCM","reasoning":"Max 2 sentences.","top_careers":["c1","c2","c3"],"title":"PCM Path","duration":"Class 11 to first job","daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"Physics","icon":"⚛️","chapters":[{"title":"Motion","priority":"high","weeks":"2 weeks"},{"title":"Waves","priority":"medium","weeks":"2 weeks"},{"title":"Optics","priority":"low","weeks":"1 week"}],"practice_strategy":"Solve PYQs daily."},{"name":"Chemistry","icon":"🧪","chapters":[{"title":"Atoms","priority":"high","weeks":"2 weeks"},{"title":"Bonds","priority":"medium","weeks":"2 weeks"},{"title":"Reactions","priority":"low","weeks":"1 week"}],"practice_strategy":"Revise NCERT first."},{"name":"Maths","icon":"📐","chapters":[{"title":"Algebra","priority":"high","weeks":"2 weeks"},{"title":"Calculus","priority":"high","weeks":"2 weeks"},{"title":"Geometry","priority":"medium","weeks":"1 week"}],"practice_strategy":"Practice 20 problems daily."}],"steps":[{"num":1,"title":"Foundation","desc":"Clear NCERT basics.","skills":["Reading","Notes"],"time":"3 months","resources":"NCERT"},{"num":2,"title":"Coaching","desc":"Join JEE/NEET prep.","skills":["Problem Solving"],"time":"1 year","resources":"Allen/Aakash"},{"num":3,"title":"Mock Tests","desc":"Take full mocks weekly.","skills":["Speed","Accuracy"],"time":"6 months","resources":"PW/Unacademy"},{"num":4,"title":"Revision","desc":"Revise all topics.","skills":["Memory","Recall"],"time":"2 months","resources":"Short Notes"}]}
+Return exactly 3 subjects with exactly 3 chapters each. Return exactly 4 steps. All strings under 50 chars.`;
+    try {
+        // use_smart_model=true → server uses llama-3.3-70b-versatile
+        const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid compact JSON. No markdown. No extra text.', 1800, true);
+        renderStuResult(parseJ(raw), true);
+    } catch (e) {
+        hide('stu-loading');
+        const r = document.getElementById('stu-result');
+        r.innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`;
+        r.classList.remove('hidden');
+    }
 }
 
-/* ──── FIXED: buildStream — reduced prompt size to prevent JSON truncation ──── */
+/* ──── buildStream: correct careers per stream + smart model ──── */
 async function buildStream(stream) {
-    const labels = { pcm: 'PCM (Physics, Chemistry, Maths)', pcb: 'PCB (Physics, Chemistry, Biology)', pcmb: 'PCMB (all four)', commerce: 'Commerce (Business, Accounts, Economics)', arts: 'Arts & Humanities' };
-    const prompt = `Generate Class 11-12 ${labels[stream]} roadmap for India. Output ONLY valid compact JSON, no extra text:
-{"title":"path title","duration":"Class 11 to first job","exam_options":["e1","e2","e3"],"top_careers":["c1","c2","c3"],"daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"Subject","icon":"📖","chapters":[{"title":"Ch","priority":"high","weeks":"2 weeks"},{"title":"Ch","priority":"high","weeks":"2 weeks"},{"title":"Ch","priority":"medium","weeks":"2 weeks"},{"title":"Ch","priority":"medium","weeks":"1 week"},{"title":"Ch","priority":"low","weeks":"1 week"}],"practice_strategy":"One sentence."}],"steps":[{"num":1,"title":"Step","desc":"One sentence.","skills":["s1","s2"],"time":"2 weeks","resources":"Resource"}]}
-Rules: exactly 3 subjects, exactly 5 chapters each, exactly 7 steps. All string values under 60 chars. No trailing commas.`;
-    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid compact JSON. No markdown. No extra text. Keep all string values under 60 characters.', 2800); renderStuResult(parseJ(raw), false); }
-    catch (e) { hide('stu-loading'); const r = document.getElementById('stu-result'); r.innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`; r.classList.remove('hidden'); }
+    const labels = {
+        pcm:      'PCM (Physics, Chemistry, Maths)',
+        pcb:      'PCB (Physics, Chemistry, Biology)',
+        pcmb:     'PCMB (Physics, Chemistry, Maths, Biology)',
+        commerce: 'Commerce (Business, Accounts, Economics)',
+        arts:     'Arts & Humanities (History, Literature, Social Sci)'
+    };
+
+    // Correct career mapping — this is what was wrong before
+    const careerMap = {
+        pcm:      { careers: ['Engineer','Data Scientist','Researcher'],      exams: ['JEE Main','JEE Advanced','BITSAT'] },
+        pcb:      { careers: ['MBBS Doctor','Dentist','Pharmacist'],          exams: ['NEET UG','AIIMS','JIPMER'] },
+        pcmb:     { careers: ['Doctor','Engineer','Biomedical Engineer'],      exams: ['NEET UG','JEE Main'] },
+        commerce: { careers: ['CA','Investment Banker','Business Analyst'],    exams: ['CA Foundation','CUET','CAT'] },
+        arts:     { careers: ['Lawyer','Civil Servant','Journalist'],          exams: ['CLAT','UPSC','CUET'] },
+    };
+    const cm = careerMap[stream] || careerMap.pcm;
+
+    // Subject templates per stream to avoid wrong AI hallucinations
+    const subjectTemplates = {
+        pcm: [
+            { name:'Physics', icon:'⚛️', chapters:[{title:'Kinematics',priority:'high',weeks:'2 weeks'},{title:'Thermodynamics',priority:'medium',weeks:'2 weeks'},{title:'Optics',priority:'low',weeks:'1 week'}], practice_strategy:'Solve 20 numericals daily.' },
+            { name:'Chemistry', icon:'🧪', chapters:[{title:'Atomic Structure',priority:'high',weeks:'2 weeks'},{title:'Chemical Bonding',priority:'medium',weeks:'2 weeks'},{title:'Equilibrium',priority:'low',weeks:'1 week'}], practice_strategy:'Revise NCERT reactions.' },
+            { name:'Maths', icon:'📐', chapters:[{title:'Algebra',priority:'high',weeks:'2 weeks'},{title:'Calculus',priority:'high',weeks:'2 weeks'},{title:'Coordinate Geometry',priority:'medium',weeks:'1 week'}], practice_strategy:'Practice 20 problems daily.' }
+        ],
+        pcb: [
+            { name:'Physics', icon:'⚛️', chapters:[{title:'Mechanics',priority:'high',weeks:'2 weeks'},{title:'Electricity',priority:'medium',weeks:'2 weeks'},{title:'Optics',priority:'low',weeks:'1 week'}], practice_strategy:'Focus on NEET weightage topics.' },
+            { name:'Chemistry', icon:'🧪', chapters:[{title:'Organic Chemistry',priority:'high',weeks:'3 weeks'},{title:'Inorganic Chemistry',priority:'high',weeks:'2 weeks'},{title:'Physical Chemistry',priority:'medium',weeks:'2 weeks'}], practice_strategy:'Memorise reactions & mechanisms.' },
+            { name:'Biology', icon:'🔬', chapters:[{title:'Cell Biology',priority:'high',weeks:'2 weeks'},{title:'Genetics',priority:'high',weeks:'2 weeks'},{title:'Human Physiology',priority:'high',weeks:'3 weeks'}], practice_strategy:'Draw diagrams and label daily.' }
+        ],
+        pcmb: [
+            { name:'Physics', icon:'⚛️', chapters:[{title:'Mechanics',priority:'high',weeks:'2 weeks'},{title:'Waves',priority:'medium',weeks:'1 week'},{title:'Modern Physics',priority:'high',weeks:'2 weeks'}], practice_strategy:'Cover both JEE and NEET patterns.' },
+            { name:'Chemistry', icon:'🧪', chapters:[{title:'Organic Chemistry',priority:'high',weeks:'3 weeks'},{title:'Physical Chemistry',priority:'high',weeks:'2 weeks'},{title:'Inorganic Chemistry',priority:'medium',weeks:'2 weeks'}], practice_strategy:'Revise NCERT thoroughly.' },
+            { name:'Biology + Maths', icon:'🔬', chapters:[{title:'Cell Biology',priority:'high',weeks:'2 weeks'},{title:'Calculus',priority:'high',weeks:'2 weeks'},{title:'Genetics',priority:'medium',weeks:'2 weeks'}], practice_strategy:'Alternate Biology and Maths daily.' }
+        ],
+        commerce: [
+            { name:'Accountancy', icon:'📊', chapters:[{title:'Journal & Ledger',priority:'high',weeks:'2 weeks'},{title:'Financial Statements',priority:'high',weeks:'2 weeks'},{title:'Cash Flow',priority:'medium',weeks:'1 week'}], practice_strategy:'Solve balance sheets daily.' },
+            { name:'Business Studies', icon:'💼', chapters:[{title:'Nature of Business',priority:'high',weeks:'1 week'},{title:'Management Functions',priority:'high',weeks:'2 weeks'},{title:'Marketing',priority:'medium',weeks:'1 week'}], practice_strategy:'Write case studies regularly.' },
+            { name:'Economics', icon:'📈', chapters:[{title:'Microeconomics',priority:'high',weeks:'2 weeks'},{title:'Macroeconomics',priority:'high',weeks:'2 weeks'},{title:'Indian Economy',priority:'medium',weeks:'1 week'}], practice_strategy:'Link theory to current affairs.' }
+        ],
+        arts: [
+            { name:'History', icon:'🏛️', chapters:[{title:'Ancient India',priority:'high',weeks:'2 weeks'},{title:'Medieval India',priority:'high',weeks:'2 weeks'},{title:'Modern India',priority:'high',weeks:'2 weeks'}], practice_strategy:'Make timelines and maps.' },
+            { name:'Political Science', icon:'⚖️', chapters:[{title:'Constitution',priority:'high',weeks:'2 weeks'},{title:'Government Structure',priority:'high',weeks:'2 weeks'},{title:'International Relations',priority:'medium',weeks:'1 week'}], practice_strategy:'Read newspapers daily.' },
+            { name:'English / Literature', icon:'📖', chapters:[{title:'Prose & Poetry',priority:'high',weeks:'2 weeks'},{title:'Grammar & Writing',priority:'high',weeks:'2 weeks'},{title:'Comprehension',priority:'medium',weeks:'1 week'}], practice_strategy:'Write essays and summaries.' }
+        ]
+    };
+
+    // Use hardcoded subject templates (no hallucination risk) + AI only for steps
+    const subjectsData = subjectTemplates[stream] || subjectTemplates.pcm;
+
+    // Ask AI only for steps (small, safe JSON)
+    const stepsPrompt = `Generate 5 practical career steps for a Class 11-12 ${labels[stream]} student in India aiming for ${cm.careers.join('/')}.
+Output ONLY a JSON array, no extra text:
+[{"num":1,"title":"Step title","desc":"One sentence only.","skills":["s1","s2"],"time":"duration","resources":"resource name"}]
+Exactly 5 steps. All strings under 50 chars. No trailing commas.`;
+
+    try {
+        const stepsRaw = await callAI([{ role: 'user', content: stepsPrompt }], 'Output ONLY a valid JSON array. No markdown, no extra text.', 800, true);
+        const steps = parseJA(stepsRaw);
+
+        const data = {
+            title: `Class 11-12 ${stream.toUpperCase()} Path`,
+            duration: 'Class 11 to first job',
+            exam_options: cm.exams,
+            top_careers: cm.careers,
+            daily_hours: { class11: '5-6 hrs', class12: '7-8 hrs' },
+            subjects: subjectsData,
+            steps: steps
+        };
+        renderStuResult(data, false);
+    } catch (e) {
+        hide('stu-loading');
+        const r = document.getElementById('stu-result');
+        r.innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`;
+        r.classList.remove('hidden');
+    }
 }
 
 function renderStuResult(data, isQuiz) {
     hide('stu-loading');
+
+    // ── Goal banner: shown for direct stream selection (not quiz) ──
+    const streamKey = (data.title || '').toLowerCase().replace('class 11-12 ', '').replace(' path', '').trim();
+    const sm = STREAM_META[streamKey] || null;
+    const goalBanner = (!isQuiz && sm) ? `<div class="card mb-md" style="border-color:rgba(200,255,0,.2);background:rgba(200,255,0,.03)"><div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;color:var(--white4);margin-bottom:.25rem">Career goal for this stream</div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:.9rem;color:var(--acid);margin-bottom:.15rem">${esc(sm.goal)}</div><div style="font-size:.68rem;color:var(--white4)">${esc(sm.exams)}</div></div>` : '';
+
     const exC = (data.exam_options || []).map(e => `<span class="chip chip-w">${esc(e)}</span>`).join('');
     const carC = (data.top_careers || []).map(c => `<span class="chip chip-a">${esc(c)}</span>`).join('');
     const subs = (data.subjects || []).map(s => `<div class="sub-card"><h4>${s.icon || '📖'} ${esc(s.name)}</h4>${(s.chapters || []).map(c => `<div class="ch-row"><span>${esc(c.title)}</span><div style="display:flex;align-items:center;gap:.35rem"><span class="text-xs text-w4">${esc(c.weeks || '')}</span><span class="${c.priority === 'high' ? 'ph ph-hi' : c.priority === 'medium' ? 'ph ph-md' : 'ph ph-lo'}">${c.priority}</span></div></div>`).join('')}<div class="text-xs text-w4 mt-sm">📌 ${esc(s.practice_strategy || '')}</div></div>`).join('');
     const steps = (data.steps || []).map(s => `<div class="step-card"><div class="step-num">${s.num}</div><div class="step-body"><div class="step-title">${esc(s.title)}</div><div class="step-desc">${esc(s.desc || '')}</div><div class="step-chips">${(s.skills || []).map(sk => `<span class="chip chip-w">${esc(sk)}</span>`).join('')}</div><div class="step-meta"><span>⏱ ${esc(s.time || '')}</span>${s.resources ? `<span>📚 ${esc(s.resources)}</span>` : ''}</div></div></div>`).join('');
     const hoursHtml = data.daily_hours ? `<div class="card card-sm mb-md" style="display:flex;gap:2rem"><div><div class="text-xs text-w4">Class 11</div><div style="font-family:'Syne',sans-serif;font-weight:800;color:var(--acid)">${esc(data.daily_hours.class11 || '')}</div></div><div><div class="text-xs text-w4">Class 12</div><div style="font-family:'Syne',sans-serif;font-weight:800;color:var(--acid)">${esc(data.daily_hours.class12 || '')}</div></div></div>` : '';
     const recBanner = isQuiz ? `<div class="card mb-md" style="border-color:rgba(200,255,0,.15);background:rgba(200,255,0,.03)"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:.95rem;color:var(--acid);margin-bottom:.2rem">AI Recommendation: ${esc(data.recommended_stream || '')}</div><div class="text-sm text-w4">${esc(data.reasoning || '')}</div></div>` : '';
+
     const r = document.getElementById('stu-result');
-    r.innerHTML = `${recBanner}<div class="card mb-md"><div class="flex-b mb-sm" style="flex-wrap:wrap;gap:.5rem"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem">${esc(data.title || '')}</div><span class="text-sm text-w4">${esc(data.duration || '')}</span></div><div style="display:flex;gap:.25rem;flex-wrap:wrap">${exC}${carC}</div></div>${hoursHtml}<div class="mb-md"><label class="lbl mb-sm">Subject-wise Roadmap</label>${subs}</div><div class="card"><label class="lbl mb-sm">Step-by-Step Path</label><div>${steps}</div></div>`;
+    r.innerHTML = `${goalBanner}${recBanner}<div class="card mb-md"><div class="flex-b mb-sm" style="flex-wrap:wrap;gap:.5rem"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem">${esc(data.title || '')}</div><span class="text-sm text-w4">${esc(data.duration || '')}</span></div><div style="display:flex;gap:.25rem;flex-wrap:wrap">${exC}${carC}</div></div>${hoursHtml}<div class="mb-md"><label class="lbl mb-sm">Subject-wise Roadmap</label>${subs}</div><div class="card"><label class="lbl mb-sm">Step-by-Step Path</label><div>${steps}</div></div>`;
     r.classList.remove('hidden');
 }
 
@@ -298,35 +399,25 @@ async function openPG(title, desc, tech, cat, level) {
         const prompt = `You are an expert coding mentor. Create a comprehensive build guide for: "${title}"
 Description: ${desc}
 Tech: ${tech.join(', ')}, Category: ${cat}, Level: ${level}
-
 ## WHAT YOU'LL BUILD
 2-3 sentences.
-
 ## PREREQUISITES
 List 3-5 things.
-
 ## STEP-BY-STEP BUILD GUIDE
 **Step 1: Project Setup**
 [instructions]
-
 **Step 2: Core Structure**
 [instructions]
-
 **Step 3: Main Feature**
 [instructions]
-
 **Step 4: Styling & Polish**
 [instructions]
-
 **Step 5: Testing & Deployment**
 [instructions]
-
 ## KEY CONCEPTS YOU'LL LEARN
 List 5-7 concepts.
-
 ## HOW TO MAKE IT STAND OUT
 3 ways to extend.
-
 ## COMMON MISTAKES
 3 specific mistakes.`;
         const guide = await callAI([{ role: 'user', content: prompt }], 'Expert coding mentor. Be specific and practical.', 1600);
@@ -504,7 +595,7 @@ async function handleGenFile(e) {
     } else { const r = new FileReader(); r.onload = ev => { genBase = ev.target.result; st.textContent = '✅ Loaded'; }; r.readAsText(file); }
 }
 
-/* ──── GITHUB FETCH (with direct browser fallback for rate limit) ──── */
+/* ──── GITHUB FETCH ──── */
 async function ghResumeFetch(username) {
     try {
         const res = await fetch('/api/github/auto-resume', {
