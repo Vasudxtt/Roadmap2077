@@ -592,11 +592,11 @@ function renderIdeas(filter) {
     }).join('');
 }
 function ideaCard(p, lc) {
-    const st = p.title.replace(/'/g, "\\'"); 
-    const sd = p.desc.replace(/'/g, "\\'");
+    const st = esc(p.title);
+    const sd = esc(p.desc);
     const techStr = JSON.stringify(p.tech || []);
     
-    return `<div class="idea-card">
+    return `<div class="idea-card" data-title="${st}" data-desc="${sd}" data-tech='${techStr}' data-cat="${esc(p.cat)}" data-level="${esc(p.level)}">
         <div class="idea-hd">
             <span class="idea-lv ${lc[p.level]}">${p.level}</span>
             <span class="idea-type">${esc(p.type)}</span>
@@ -606,10 +606,7 @@ function ideaCard(p, lc) {
         <div class="idea-tech">${(p.tech || []).map(t => `<span>${esc(t)}</span>`).join('')}</div>
         <div class="idea-foot">
             <div class="idea-count">👥 ${p.started >= 1000 ? (p.started / 1000).toFixed(1) + 'k' : p.started}</div>
-            <button class="idea-ai" 
-                onclick="event.stopPropagation(); openPG('${st}', '${sd}', ${techStr}, '${p.cat}', '${p.level}')">
-                ✦ Ask AI
-            </button>
+            <button class="idea-ai">✦ Ask AI</button>
         </div>
     </div>`;
 }
