@@ -386,51 +386,72 @@ const BUILD_IDEAS = [
 ];
 let pgTitle = '', pgData = null;
 async function openPG(title, desc, tech, cat, level) {
-    pgTitle = title; pgData = { title, desc, tech, cat, level };
-    document.getElementById('pg-overlay').style.display = 'flex';
-    document.getElementById('pg-title-m').textContent = title;
-    document.getElementById('pg-meta-m').textContent = `${level} · ${cat} · ${tech.join(', ')}`;
+    pgTitle = title; 
+    pgData = { title, desc, tech, cat, level };
+    
+    const overlay = document.getElementById('pg-overlay');
+    const titleEl = document.getElementById('pg-title-m');
+    const metaEl = document.getElementById('pg-meta-m');
+    const loadingEl = document.getElementById('pg-loading-m');
+    const contentEl = document.getElementById('pg-content-m');
+    const textEl = document.getElementById('pg-text-m');
+    const stepsEl = document.getElementById('pg-steps-m');
+    const conceptsEl = document.getElementById('pg-concepts-m');
+
+    overlay.style.display = 'flex';
+    titleEl.textContent = title;
+    metaEl.textContent = `${level} · ${cat} · ${tech.join(', ')}`;
+    
     hide('pg-content-m');
-    document.getElementById('pg-loading-m').style.display = 'flex';
-    document.getElementById('pg-text-m').textContent = '';
-    document.getElementById('pg-steps-m').innerHTML = '';
-    document.getElementById('pg-concepts-m').innerHTML = '';
-    try {
-        const prompt = `You are an expert coding mentor. Create a comprehensive build guide for: "${title}"
+    loadingEl.style.display = 'flex';
+    textEl.textContent = '';
+    stepsEl.innerHTML = '';
+    conceptsEl.innerHTML = '';
+
+    const prompt = `You are an expert coding mentor. Create a comprehensive build guide for: "${title}"
+
 Description: ${desc}
-Tech: ${tech.join(', ')}, Category: ${cat}, Level: ${level}
-## WHAT YOU'LL BUILD
-2-3 sentences.
-## PREREQUISITES
-List 3-5 things.
-## STEP-BY-STEP BUILD GUIDE
-**Step 1: Project Setup**
-[instructions]
-**Step 2: Core Structure**
-[instructions]
-**Step 3: Main Feature**
-[instructions]
-**Step 4: Styling & Polish**
-[instructions]
-**Step 5: Testing & Deployment**
-[instructions]
-## KEY CONCEPTS YOU'LL LEARN
-List 5-7 concepts.
-## HOW TO MAKE IT STAND OUT
-3 ways to extend.
-## COMMON MISTAKES
-3 specific mistakes.`;
-        const guide = await callAI([{ role: 'user', content: prompt }], 'Expert coding mentor. Be specific and practical.', 1600);
-        const steps = extractSteps(guide);
-        document.getElementById('pg-steps-m').innerHTML = steps.map((s, i) => `<div class="pg-step"><div class="pg-step-num">${i + 1}</div><div><div class="pg-step-title">${esc(s.title)}</div><div class="pg-step-text">${esc(s.desc.slice(0, 180))}${s.desc.length > 180 ? '…' : ''}</div></div></div>`).join('');
-        const concepts = extractConcepts(guide);
-        document.getElementById('pg-concepts-m').innerHTML = concepts.map(c => `<span class="concept-pill">⚡ ${esc(c)}</span>`).join('');
-        document.getElementById('pg-text-m').textContent = guide;
-        document.getElementById('pg-loading-m').style.display = 'none';
+Tech Stack: ${tech.join(', ')}
+Category: ${cat}
+Level: ${level}
+
+Output in clean Markdown with these sections:
+
+# Project: ${title}
+
+## Overview
+(2-3 sentences)
+
+## Tech Stack & Setup
+- List of technologies
+- Step-by-step installation/setup
+
+## Step-by-Step Implementation
+Detailed steps with code snippets where relevant.
+
+## Key Concepts to Learn
+- Bullet list of important concepts
+
+## Bonus Features / Next Steps
+- 3-4 ideas to extend the project
+
+Be practical, beginner-friendly where possible, and include real code examples.`;
+
+    try {
+        const raw = await callAI(
+            [{ role: 'user', content: prompt }], 
+            'Expert full-stack coding mentor. Output clean Markdown.', 
+            2200
+        );
+        
+        textEl.innerHTML = marked ? marked.parse(raw) : esc(raw); // or just raw if no marked.js
+        hide('pg-loading-m');
         show('pg-content-m');
+        
     } catch (e) {
-        document.getElementById('pg-text-m').textContent = '⚠️ ' + e.message;
-        document.getElementById('pg-loading-m').style.display = 'none';
+        console.error(e);
+        hide('pg-loading-m');
+        textEl.innerHTML = `<div style="color:var(--red);padding:1rem">⚠️ ${esc(e.message)}</div>`;
         show('pg-content-m');
     }
 }
