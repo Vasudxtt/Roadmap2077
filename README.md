@@ -10,7 +10,7 @@
 
 ## What is RoadMap2077?
 
-10xThink is a full-stack AI career intelligence platform built for Indian students and professionals. It covers every domain — tech, medical, finance, law, content creation, government — and gives you brutally honest, personalized guidance in seconds.
+RoadMap2077 is a full-stack AI career intelligence platform built for Indian students and professionals. It covers every domain — tech, medical, finance, law, content creation, government — and gives you brutally honest, personalized guidance in seconds.
 
 No login. No paywalls. Just AI Without Limit.
 
