@@ -385,76 +385,78 @@ const BUILD_IDEAS = [
     { title: 'Fitness Tracker', desc: 'Track workouts, calories, and progress with HealthKit/Google Fit integration.', level: 'advanced', cat: 'Mobile', type: 'React Native', tech: ['React Native', 'HealthKit', 'Firebase'], started: 6710 },
 ];
 let pgTitle = '', pgData = null;
+/* ──── PROJECT AI GUIDE ──── */
 async function openPG(title, desc, tech, cat, level) {
-    pgTitle = title; 
+    console.log('openPG called with:', title);
+
+    pgTitle = title;
     pgData = { title, desc, tech, cat, level };
-    
+
     const overlay = document.getElementById('pg-overlay');
-    const titleEl = document.getElementById('pg-title-m');
-    const metaEl = document.getElementById('pg-meta-m');
-    const loadingEl = document.getElementById('pg-loading-m');
-    const contentEl = document.getElementById('pg-content-m');
-    const textEl = document.getElementById('pg-text-m');
-    const stepsEl = document.getElementById('pg-steps-m');
-    const conceptsEl = document.getElementById('pg-concepts-m');
+    if (!overlay) {
+        alert("Modal HTML not found!");
+        return;
+    }
 
-    overlay.style.display = 'flex';
-    titleEl.textContent = title;
-    metaEl.textContent = `${level} · ${cat} · ${tech.join(', ')}`;
-    
+    document.getElementById('pg-title-m').textContent = title;
+    document.getElementById('pg-meta-m').textContent = `${level} · ${cat} · ${tech.join(', ')}`;
+
     hide('pg-content-m');
-    loadingEl.style.display = 'flex';
-    textEl.textContent = '';
-    stepsEl.innerHTML = '';
-    conceptsEl.innerHTML = '';
+    const loading = document.getElementById('pg-loading-m');
+    loading.style.display = 'flex';
 
-    const prompt = `You are an expert coding mentor. Create a comprehensive build guide for: "${title}"
+    const textEl = document.getElementById('pg-text-m');
+    textEl.innerHTML = '';
 
+    const prompt = `You are an expert coding mentor.
+
+Create a detailed build guide for this project:
+
+Project: ${title}
 Description: ${desc}
-Tech Stack: ${tech.join(', ')}
+Tech: ${tech.join(', ')}
 Category: ${cat}
 Level: ${level}
 
-Output in clean Markdown with these sections:
+Use this exact Markdown structure:
 
-# Project: ${title}
+# ${title}
 
 ## Overview
-(2-3 sentences)
+2-3 sentences explaining the project.
 
 ## Tech Stack & Setup
-- List of technologies
-- Step-by-step installation/setup
+- Technologies used
+- Step-by-step setup instructions
 
 ## Step-by-Step Implementation
-Detailed steps with code snippets where relevant.
+Numbered steps with code examples.
 
 ## Key Concepts to Learn
-- Bullet list of important concepts
+- Important concepts
 
-## Bonus Features / Next Steps
-- 3-4 ideas to extend the project
+## Bonus Features
+3-4 ideas to take it further.
 
-Be practical, beginner-friendly where possible, and include real code examples.`;
+Keep it practical and encouraging.`;
 
     try {
-        const raw = await callAI(
-            [{ role: 'user', content: prompt }], 
-            'Expert full-stack coding mentor. Output clean Markdown.', 
-            2200
-        );
+        const raw = await callAI([{ role: 'user', content: prompt }], 
+            'Expert coding mentor. Output clean Markdown.', 2200);
         
-        textEl.innerHTML = marked ? marked.parse(raw) : esc(raw); // or just raw if no marked.js
+        textEl.innerHTML = raw.replace(/\n/g, '<br><br>');
         hide('pg-loading-m');
         show('pg-content-m');
         
     } catch (e) {
         console.error(e);
         hide('pg-loading-m');
-        textEl.innerHTML = `<div style="color:var(--red);padding:1rem">⚠️ ${esc(e.message)}</div>`;
+        textEl.innerHTML = `<div style="color:var(--red);padding:1.5rem">❌ ${esc(e.message)}</div>`;
         show('pg-content-m');
     }
 }
+
+window.openPG = openPG;
 function extractSteps(text) {
     const steps = [];
     const matches = text.match(/\*\*Step \d+:([^*]+)\*\*\n([^*]+)/g) || [];
