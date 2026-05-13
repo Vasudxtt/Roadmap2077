@@ -7,7 +7,6 @@ const PORT = process.env.PORT || 3000;
 
 // ── Model config: use gemma2-9b-it (higher TPM on free tier) with llama as fallback
 const MODELS = [
-  'gemma2-9b-it',           // 15,000 TPM free — best default
   'llama-3.1-8b-instant',   // 6,000 TPM — fallback
   'llama3-8b-8192',         // 6,000 TPM — last resort
 ];
