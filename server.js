@@ -1,15 +1,13 @@
 require('dotenv').config();
+const Groq    = require('groq-sdk');
 const express = require('express');
 const path    = require('path');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Model config: use gemma2-9b-it (higher TPM on free tier) with llama as fallback
-const MODELS = [
-  'llama-3.1-8b-instant',   // 6,000 TPM — fallback
-  'llama3-8b-8192',         // 6,000 TPM — last resort
-];
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const GROQ_MODEL   = 'llama-3.1-8b-instant';
 
 app.use(express.json({ limit: '16mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -22,61 +20,25 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── Groq call with automatic model fallback on rate-limit ──
-async function groqCall(messages, maxTokens = 1400) {
-  let lastErr;
-  for (const model of MODELS) {
-    try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          max_tokens: maxTokens,
-          temperature: 0.4,   // lower = more consistent JSON output
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        // Rate limit → try next model
-        if (response.status === 429) {
-          lastErr = new Error(data?.error?.message || `Rate limited on ${model}`);
-          continue;
-        }
-        throw new Error(data?.error?.message || `Groq error ${response.status}`);
-      }
-      return data?.choices?.[0]?.message?.content || '';
-    } catch (err) {
-      // Network error or non-429 → rethrow immediately
-      if (!err.message.includes('Rate limit') && !err.message.includes('rate limit')) throw err;
-      lastErr = err;
-    }
-  }
-  throw lastErr || new Error('All models rate-limited. Please wait 30 seconds and try again.');
-}
-
 app.post('/api/ai', async (req, res) => {
   try {
     const { messages, system, max_tokens } = req.body;
     if (!messages || !Array.isArray(messages))
       return res.status(400).json({ error: 'messages array is required' });
-
     const groqMessages = [];
     if (system) groqMessages.push({ role: 'system', content: system });
     groqMessages.push(...messages);
-
-    const text = await groqCall(groqMessages, max_tokens || 1400);
-    res.json({ content: [{ type: 'text', text }] });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({ model: GROQ_MODEL, messages: groqMessages, max_tokens: max_tokens || 1400, temperature: 0.7 }),
+    });
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json({ error: data?.error?.message || `Groq error ${response.status}` });
+    res.json({ content: [{ type: 'text', text: data?.choices?.[0]?.message?.content || '' }] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ── GitHub helpers ──
 function githubHeaders() {
   const h = { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': '10xThink-App' };
   if (process.env.GITHUB_TOKEN) h['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
@@ -125,7 +87,6 @@ app.post('/api/github/auto-resume', async (req, res) => {
   } catch (err) { return res.status(500).json({ error: err.message }); }
 });
 
-// ── Awwwards data ──
 const AWW_SITES = [
   { id:1,  name:'Lusion',            country:'🇬🇧',cat:'Creative Studio · WebGL',         url:'https://lusion.co',               img:'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=900&q=90', design:9.9, usability:9.2, creativity:10.0, tags:['WebGL','3D','GSAP'],    award:'SOTD', why:'Groundbreaking real-time 3D WebGL visuals that redefined studio portfolios' },
   { id:2,  name:'Bruno Simon',        country:'🇫🇷',cat:'Portfolio · 3D Game',             url:'https://bruno-simon.com',         img:'https://images.unsplash.com/photo-1614854262318-831574f15f1f?w=900&q=90', design:9.9, usability:9.5, creativity:10.0, tags:['Three.js','Game','Fun'],award:'SOTD', why:'Drive a mini car through your portfolio — the most loved creative dev site ever' },
@@ -188,7 +149,5 @@ app.get('/{*path}', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`\n🚀  10xThink server → http://localhost:${PORT}`);
-  console.log(`    Primary model : gemma2-9b-it (15k TPM)`);
-  console.log(`    Fallback 1    : llama-3.1-8b-instant`);
-  console.log(`    Fallback 2    : llama3-8b-8192\n`);
+  console.log(`    AI Model : ${GROQ_MODEL}\n`);
 });
