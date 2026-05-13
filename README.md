@@ -1,4 +1,4 @@
-# 10xThink — AI Career Intelligence Platform
+# RoadMap2077 — AI Career Intelligence Platform
 
 > **From Doubt to Clarity** — Personalized career roadmaps, exam planners, project guidance, resume AI & more. Powered by Groq.
 
@@ -8,7 +8,7 @@
 
 ---
 
-## What is 10xThink?
+## What is RoadMap2077?
 
 10xThink is a full-stack AI career intelligence platform built for Indian students and professionals. It covers every domain — tech, medical, finance, law, content creation, government — and gives you brutally honest, personalized guidance in seconds.
 
