@@ -7,7 +7,10 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-const GROQ_MODEL   = 'llama-3.1-8b-instant';
+
+// ── Model selection: use a bigger model for student path JSON, fast model for everything else ──
+const GROQ_MODEL_FAST  = 'llama-3.1-8b-instant';
+const GROQ_MODEL_SMART = 'llama-3.3-70b-versatile';
 
 // ── In-memory cache for GitHub responses (10 min TTL) ──
 const ghCache = new Map();
@@ -25,17 +28,32 @@ app.use((req, res, next) => {
 
 app.post('/api/ai', async (req, res) => {
   try {
-    const { messages, system, max_tokens } = req.body;
+    const { messages, system, max_tokens, use_smart_model } = req.body;
     if (!messages || !Array.isArray(messages))
       return res.status(400).json({ error: 'messages array is required' });
+
+    // Use smart model when caller requests it (student path) or max_tokens > 2000
+    const model = (use_smart_model || (max_tokens && max_tokens > 2000))
+      ? GROQ_MODEL_SMART
+      : GROQ_MODEL_FAST;
+
     const groqMessages = [];
     if (system) groqMessages.push({ role: 'system', content: system });
     groqMessages.push(...messages);
+
+    console.log(`[AI] model=${model} max_tokens=${max_tokens || 1400}`);
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({ model: GROQ_MODEL, messages: groqMessages, max_tokens: max_tokens || 1400, temperature: 0.7 }),
+      body: JSON.stringify({
+        model,
+        messages: groqMessages,
+        max_tokens: max_tokens || 1400,
+        temperature: 0.3,   // lower = more deterministic JSON
+      }),
     });
+
     const data = await response.json();
     if (!response.ok) return res.status(response.status).json({ error: data?.error?.message || `Groq error ${response.status}` });
     res.json({ content: [{ type: 'text', text: data?.choices?.[0]?.message?.content || '' }] });
@@ -78,7 +96,6 @@ app.post('/api/github/auto-resume', async (req, res) => {
     const { username } = req.body;
     if (!username) return res.status(400).json({ error: 'username required' });
 
-    // ── Cache check: return cached result if less than 10 min old ──
     const cacheKey = username.toLowerCase();
     const cached = ghCache.get(cacheKey);
     if (cached && Date.now() - cached.ts < 10 * 60 * 1000) {
@@ -101,9 +118,7 @@ app.post('/api/github/auto-resume', async (req, res) => {
     }));
 
     const result = { profile, repos: ownRepos };
-    // ── Save to cache ──
     ghCache.set(cacheKey, { ts: Date.now(), data: result });
-
     return res.json(result);
   } catch (err) {
     const msg = err.message || '';
@@ -178,6 +193,7 @@ app.get('/{*path}', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`\n🚀  10xThink server → http://localhost:${PORT}`);
-  console.log(`    AI Model : ${GROQ_MODEL}\n`);
+  console.log(`\n🚀  Roadmap2077 server → http://localhost:${PORT}`);
+  console.log(`    Fast model : ${GROQ_MODEL_FAST}`);
+  console.log(`    Smart model: ${GROQ_MODEL_SMART}\n`);
 });
