@@ -385,25 +385,20 @@ const BUILD_IDEAS = [
     { title: 'Fitness Tracker', desc: 'Track workouts, calories, and progress with HealthKit/Google Fit integration.', level: 'advanced', cat: 'Mobile', type: 'React Native', tech: ['React Native', 'HealthKit', 'Firebase'], started: 6710 },
 ];
 let pgTitle = '', pgData = null;
-/* ──── PROJECT AI GUIDE ──── */
-/* ──── PROJECT AI GUIDE ──── */
+/* ──── PROJECT AI GUIDE (Clean Version) ──── */
 async function openPG(title, desc, tech, cat, level) {
-    console.log('✅ openPG called for:', title);
+    console.log('✅ openPG called:', title);
 
     pgTitle = title;
-    pgData = { title, desc, tech: tech || [], cat, level };
+    pgData = { title, desc, tech, cat, level };
 
-    // Show modal
     const overlay = document.getElementById('pg-overlay');
-    if (!overlay) {
-        alert("❌ Modal not found. Check HTML for #pg-overlay");
-        return;
-    }
+    if (!overlay) return alert("Modal (#pg-overlay) not found in HTML");
 
     overlay.style.display = 'flex';
-    
+
     document.getElementById('pg-title-m').textContent = title;
-    document.getElementById('pg-meta-m').textContent = `${level} · ${cat} · ${(tech || []).join(', ')}`;
+    document.getElementById('pg-meta-m').textContent = `${level} · ${cat} · ${tech.join(', ')}`;
 
     hide('pg-content-m');
     const loading = document.getElementById('pg-loading-m');
@@ -412,36 +407,36 @@ async function openPG(title, desc, tech, cat, level) {
     const textEl = document.getElementById('pg-text-m');
     if (textEl) textEl.innerHTML = '';
 
-    const prompt = `Create a practical project build guide:
+    const prompt = `Create a detailed build guide for:
 
 Project: ${title}
 Description: ${desc}
-Tech: ${(tech || []).join(', ')}
+Tech: ${tech.join(', ')}
 Level: ${level}
 
-Use this structure:
+Use this Markdown structure:
 
 # ${title}
 
 ## Overview
-2-3 sentences.
+(2-3 sentences)
 
 ## Tech Stack & Setup
 Installation steps.
 
-## Step-by-Step Guide
+## Step-by-Step Implementation
 1. ...
 2. ...
 
 ## Key Concepts
 - Bullet list
 
-## Bonus Ideas
-3-4 ways to improve it.`;
+## Bonus Features
+3-4 extension ideas.`;
 
     try {
         const raw = await callAI([{ role: 'user', content: prompt }], 
-            'Expert coding mentor. Output clean Markdown.', 2000);
+            'Expert coding mentor. Output clean Markdown.', 2200);
         
         if (textEl) textEl.innerHTML = raw.replace(/\n/g, '<br>');
         
@@ -449,14 +444,29 @@ Installation steps.
         show('pg-content-m');
     } catch (e) {
         console.error(e);
-        if (textEl) textEl.innerHTML = `<div style="color:var(--red);padding:20px">Error: ${esc(e.message)}</div>`;
+        if (textEl) textEl.innerHTML = `<div style="color:var(--red);padding:20px">❌ ${esc(e.message)}</div>`;
         hide('pg-loading-m');
         show('pg-content-m');
     }
 }
 
-// Make sure it's accessible from inline onclick
 window.openPG = openPG;
+
+// Add click listeners to all "Ask AI" buttons (Event Delegation)
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('idea-ai')) {
+        const card = e.target.closest('.idea-card');
+        if (!card) return;
+
+        const title = card.dataset.title;
+        const desc = card.dataset.desc;
+        const tech = JSON.parse(card.dataset.tech || '[]');
+        const cat = card.dataset.cat;
+        const level = card.dataset.level;
+
+        openPG(title, desc, tech, cat, level);
+    }
+});
 
 function extractSteps(text) {
     const steps = [];
