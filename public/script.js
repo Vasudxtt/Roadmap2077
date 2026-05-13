@@ -146,23 +146,28 @@ function renderQuiz() {
     document.getElementById('quiz-opts').innerHTML = q.opts.map((o, i) => `<button class="quiz-opt" onclick="ansQ(${i},'${o.replace(/'/g, "\\'")}' )">${o}</button>`).join('');
 }
 function ansQ(i, v) { qAns.push(v); qIdx++; renderQuiz(); }
+
+/* ──── FIXED: finishQuiz — reduced prompt size to prevent JSON truncation ──── */
 async function finishQuiz() {
     hide('quiz-panel'); show('stu-loading');
     const prompt = `Student quiz answers: ${qAns.join(' | ')}
-Recommend best Indian Class 11-12 stream. Output ONLY valid JSON:
-{"recommended_stream":"PCM/PCB/PCMB/Commerce/Arts","reasoning":"<2 sentences>","top_careers":["c1","c2","c3"],"title":"<path>","duration":"<Class 11 to job>","daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"<Subject>","icon":"<emoji>","chapters":[{"title":"<ch>","priority":"high|medium|low","weeks":"2 weeks"}],"practice_strategy":"<1 sentence>"}],"steps":[{"num":1,"title":"...","desc":"...","skills":["s1"],"time":"...","resources":"..."}]}
-3-4 subjects, 6-8 steps.`;
-    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid JSON.', 1600); renderStuResult(parseJ(raw), true); }
+Recommend best Indian Class 11-12 stream. Output ONLY valid compact JSON, no extra text:
+{"recommended_stream":"PCM","reasoning":"2 sentences max.","top_careers":["c1","c2","c3"],"title":"path title","duration":"Class 11 to first job","daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"Subject","icon":"📖","chapters":[{"title":"Chapter","priority":"high","weeks":"2 weeks"},{"title":"Chapter","priority":"medium","weeks":"2 weeks"},{"title":"Chapter","priority":"low","weeks":"1 week"}],"practice_strategy":"One sentence."}],"steps":[{"num":1,"title":"Step","desc":"One sentence.","skills":["s1","s2"],"time":"2 weeks","resources":"Resource name"}]}
+Return exactly 3 subjects, exactly 6 steps. Keep ALL string values SHORT (under 60 chars).`;
+    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid compact JSON. No markdown. No extra text. Keep all string values short.', 2800); renderStuResult(parseJ(raw), true); }
     catch (e) { hide('stu-loading'); const r = document.getElementById('stu-result'); r.innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`; r.classList.remove('hidden'); }
 }
+
+/* ──── FIXED: buildStream — reduced prompt size to prevent JSON truncation ──── */
 async function buildStream(stream) {
     const labels = { pcm: 'PCM (Physics, Chemistry, Maths)', pcb: 'PCB (Physics, Chemistry, Biology)', pcmb: 'PCMB (all four)', commerce: 'Commerce (Business, Accounts, Economics)', arts: 'Arts & Humanities' };
-    const prompt = `Generate Class 11-12 ${labels[stream]} roadmap for India. Output ONLY valid JSON:
-{"title":"<path>","duration":"<Class 11 to job>","exam_options":["e1","e2","e3"],"top_careers":["c1","c2"],"daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"<Subject>","icon":"<emoji>","chapters":[{"title":"<ch>","priority":"high|medium|low","weeks":"2 weeks"}],"practice_strategy":"<1 sentence>"}],"steps":[{"num":1,"title":"...","desc":"...","skills":["s1"],"time":"...","resources":"..."}]}
-All main subjects, 5-7 chapters each, 8-10 steps.`;
-    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid JSON.', 1600); renderStuResult(parseJ(raw), false); }
+    const prompt = `Generate Class 11-12 ${labels[stream]} roadmap for India. Output ONLY valid compact JSON, no extra text:
+{"title":"path title","duration":"Class 11 to first job","exam_options":["e1","e2","e3"],"top_careers":["c1","c2","c3"],"daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"Subject","icon":"📖","chapters":[{"title":"Ch","priority":"high","weeks":"2 weeks"},{"title":"Ch","priority":"high","weeks":"2 weeks"},{"title":"Ch","priority":"medium","weeks":"2 weeks"},{"title":"Ch","priority":"medium","weeks":"1 week"},{"title":"Ch","priority":"low","weeks":"1 week"}],"practice_strategy":"One sentence."}],"steps":[{"num":1,"title":"Step","desc":"One sentence.","skills":["s1","s2"],"time":"2 weeks","resources":"Resource"}]}
+Rules: exactly 3 subjects, exactly 5 chapters each, exactly 7 steps. All string values under 60 chars. No trailing commas.`;
+    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid compact JSON. No markdown. No extra text. Keep all string values under 60 characters.', 2800); renderStuResult(parseJ(raw), false); }
     catch (e) { hide('stu-loading'); const r = document.getElementById('stu-result'); r.innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`; r.classList.remove('hidden'); }
 }
+
 function renderStuResult(data, isQuiz) {
     hide('stu-loading');
     const exC = (data.exam_options || []).map(e => `<span class="chip chip-w">${esc(e)}</span>`).join('');
@@ -501,7 +506,6 @@ async function handleGenFile(e) {
 
 /* ──── GITHUB FETCH (with direct browser fallback for rate limit) ──── */
 async function ghResumeFetch(username) {
-    // Try server first
     try {
         const res = await fetch('/api/github/auto-resume', {
             method: 'POST',
@@ -513,14 +517,13 @@ async function ghResumeFetch(username) {
         if (!res.ok) throw new Error(data.error || 'Server error');
         return data;
     } catch (serverErr) {
-        // Fallback: call GitHub API directly from browser
         console.warn('[GitHub] Server fallback triggered:', serverErr.message);
         const [profileRes, reposRes] = await Promise.all([
             fetch(`https://api.github.com/users/${encodeURIComponent(username)}`),
             fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=50`)
         ]);
         if (profileRes.status === 403 || reposRes.status === 403) {
-            throw new Error('GitHub API rate limit exceeded on your network too. Please add GITHUB_TOKEN to your .env — get a free token at github.com/settings/tokens (no scopes needed).');
+            throw new Error('GitHub API rate limit exceeded. Add GITHUB_TOKEN to your .env — get a free token at github.com/settings/tokens (no scopes needed).');
         }
         if (!profileRes.ok) throw new Error(`GitHub user "@${username}" not found.`);
         const profile = await profileRes.json();
