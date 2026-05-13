@@ -60,7 +60,7 @@ function handleAC() {
 document.addEventListener('click', e => { if (!e.target.closest('.ac-wrap')) document.getElementById('ac-list').classList.add('hidden'); });
 function setC(v) { document.getElementById('career-input').value = v; document.getElementById('ac-list').classList.add('hidden'); }
 
-/* ──── AI CALL ──── */
+/* ──── AI CALL (proxied via /api/ai from server.js) ──── */
 async function callAI(messages, system, maxTokens = 1400) {
     const res = await fetch('/api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages, system, max_tokens: maxTokens }) });
     const data = await res.json();
@@ -69,83 +69,8 @@ async function callAI(messages, system, maxTokens = 1400) {
     if (!t) throw new Error('Empty response from AI');
     return t;
 }
-
-/* ──── BULLETPROOF JSON PARSING ──── */
-function sanitizeJSON(raw) {
-    // Remove markdown code fences
-    let s = raw.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
-    // Remove trailing commas before } or ]
-    s = s.replace(/,\s*([}\]])/g, '$1');
-    // Replace smart/curly quotes with straight quotes
-    s = s.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
-    // Remove control characters except whitespace
-    s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-    return s;
-}
-
-function extractBraces(s) {
-    const start = s.indexOf('{');
-    const end = s.lastIndexOf('}');
-    if (start >= 0 && end > start) return s.slice(start, end + 1);
-    return s;
-}
-
-function extractBrackets(s) {
-    const start = s.indexOf('[');
-    const end = s.lastIndexOf(']');
-    if (start >= 0 && end > start) return s.slice(start, end + 1);
-    return s;
-}
-
-function parseJ(raw) {
-    const s = sanitizeJSON(raw);
-    try { return JSON.parse(extractBraces(s)); }
-    catch (e1) {
-        // Try to fix unescaped newlines inside strings
-        try {
-            const fixed = extractBraces(s).replace(/(?<=":.*?)[\n\r]+(?=.*?")/g, ' ');
-            return JSON.parse(fixed);
-        } catch (e2) {
-            // Last resort: strip everything after last valid closing brace
-            const clean = extractBraces(s);
-            const lastBrace = clean.lastIndexOf('}');
-            if (lastBrace > 0) {
-                try { return JSON.parse(clean.slice(0, lastBrace + 1)); } catch (e3) { }
-            }
-            throw new Error('Failed to parse AI response as JSON. Please try again.');
-        }
-    }
-}
-
-function parseJA(raw) {
-    const s = sanitizeJSON(raw);
-    // First try: extract bracket array
-    try { return JSON.parse(extractBrackets(s)); }
-    catch (e1) {
-        // Second try: find all quoted strings and build array manually
-        try {
-            const arr = extractBrackets(s);
-            const fixed = arr.replace(/,\s*([}\]])/g, '$1');
-            return JSON.parse(fixed);
-        } catch (e2) {
-            // Third try: regex extract all string values
-            const matches = s.match(/"([^"\\]|\\.)*"/g);
-            if (matches && matches.length > 0) {
-                try {
-                    return matches.map(m => m.slice(1, -1));
-                } catch (e3) { }
-            }
-            // Fourth try: line-by-line extraction
-            const lines = s.split('\n')
-                .map(l => l.replace(/^[\s\-\*\d\.\,\[\]"]+|[\s\,\[\]"]+$/g, '').trim())
-                .filter(l => l.length > 0 && l !== '[' && l !== ']');
-            if (lines.length > 0) return lines;
-            // Final fallback
-            return [];
-        }
-    }
-}
-
+function parseJ(raw) { let c = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim(); const s = c.indexOf('{'), e = c.lastIndexOf('}'); if (s >= 0 && e >= 0) c = c.slice(s, e + 1); return JSON.parse(c); }
+function parseJA(raw) { let c = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim(); const s = c.indexOf('['), e = c.lastIndexOf(']'); if (s >= 0 && e >= 0) c = c.slice(s, e + 1); return JSON.parse(c); }
 function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function show(id) { const el = typeof id === 'string' ? document.getElementById(id) : id; if (el) el.classList.remove('hidden'); }
 function hide(id) { const el = typeof id === 'string' ? document.getElementById(id) : id; if (el) el.classList.add('hidden'); }
@@ -162,11 +87,11 @@ async function generateRoadmap() {
     show('rm-loading'); hide('rm-ph'); hide('rm-result');
     const prompt = `Generate detailed sequential career roadmap to become a "${career}".
 Timeline: ${timeline}, Level: ${level}, Domain: ${domain}${custom ? '\nContext: ' + custom : ''}
-Output ONLY valid JSON (no trailing commas, no extra text):
+Output ONLY valid JSON:
 {"title":"Roadmap: <title>","duration":"<total>","timeline_note":"<warning if unrealistic, else empty>","steps":[{"num":1,"title":"<step>","desc":"<2-3 sentences>","skills":["s1","s2"],"time":"<e.g. 2-3 weeks>","project":"<hands-on task or empty>","video_resource":"<YouTube search query>","resources":"<best resource name>"}]}
-Include 8-12 steps. Be specific and realistic. IMPORTANT: Ensure valid JSON - no trailing commas.`;
+Include 8-12 steps. Be specific and realistic.`;
     try {
-        const raw = await callAI([{ role: 'user', content: prompt }], 'Expert career coach. Output ONLY valid JSON with no trailing commas.', 1600);
+        const raw = await callAI([{ role: 'user', content: prompt }], 'Expert career coach. Output ONLY valid JSON.', 1600);
         const data = parseJ(raw);
         rmSteps = data.steps || []; rmDone = new Set();
         document.getElementById('rm-title').textContent = data.title || career;
@@ -224,18 +149,18 @@ function ansQ(i, v) { qAns.push(v); qIdx++; renderQuiz(); }
 async function finishQuiz() {
     hide('quiz-panel'); show('stu-loading');
     const prompt = `Student quiz answers: ${qAns.join(' | ')}
-Recommend best Indian Class 11-12 stream. Output ONLY valid JSON with no trailing commas:
+Recommend best Indian Class 11-12 stream. Output ONLY valid JSON:
 {"recommended_stream":"PCM/PCB/PCMB/Commerce/Arts","reasoning":"<2 sentences>","top_careers":["c1","c2","c3"],"title":"<path>","duration":"<Class 11 to job>","daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"<Subject>","icon":"<emoji>","chapters":[{"title":"<ch>","priority":"high|medium|low","weeks":"2 weeks"}],"practice_strategy":"<1 sentence>"}],"steps":[{"num":1,"title":"...","desc":"...","skills":["s1"],"time":"...","resources":"..."}]}
-3-4 subjects, 6-8 steps. IMPORTANT: Valid JSON only, no trailing commas.`;
-    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid JSON with no trailing commas.', 1600); renderStuResult(parseJ(raw), true); }
+3-4 subjects, 6-8 steps.`;
+    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid JSON.', 1600); renderStuResult(parseJ(raw), true); }
     catch (e) { hide('stu-loading'); const r = document.getElementById('stu-result'); r.innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`; r.classList.remove('hidden'); }
 }
 async function buildStream(stream) {
     const labels = { pcm: 'PCM (Physics, Chemistry, Maths)', pcb: 'PCB (Physics, Chemistry, Biology)', pcmb: 'PCMB (all four)', commerce: 'Commerce (Business, Accounts, Economics)', arts: 'Arts & Humanities' };
-    const prompt = `Generate Class 11-12 ${labels[stream]} roadmap for India. Output ONLY valid JSON with no trailing commas:
+    const prompt = `Generate Class 11-12 ${labels[stream]} roadmap for India. Output ONLY valid JSON:
 {"title":"<path>","duration":"<Class 11 to job>","exam_options":["e1","e2","e3"],"top_careers":["c1","c2"],"daily_hours":{"class11":"5-6 hrs","class12":"7-8 hrs"},"subjects":[{"name":"<Subject>","icon":"<emoji>","chapters":[{"title":"<ch>","priority":"high|medium|low","weeks":"2 weeks"}],"practice_strategy":"<1 sentence>"}],"steps":[{"num":1,"title":"...","desc":"...","skills":["s1"],"time":"...","resources":"..."}]}
-All main subjects, 5-7 chapters each, 8-10 steps. IMPORTANT: Valid JSON only, no trailing commas.`;
-    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid JSON with no trailing commas.', 1600); renderStuResult(parseJ(raw), false); }
+All main subjects, 5-7 chapters each, 8-10 steps.`;
+    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Output ONLY valid JSON.', 1600); renderStuResult(parseJ(raw), false); }
     catch (e) { hide('stu-loading'); const r = document.getElementById('stu-result'); r.innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`; r.classList.remove('hidden'); }
 }
 function renderStuResult(data, isQuiz) {
@@ -263,10 +188,10 @@ async function generateExamPlan() {
     const daysLeft = dateVal ? Math.ceil((new Date(dateVal) - Date.now()) / 86400000) : 90;
     hide('ep-ph'); show('ep-loading'); hide('ep-result');
     const prompt = `Create realistic study planner for ${exam}. Date: ${dateVal || '~3 months'} (${daysLeft} days). Daily: ${hours} hrs. Prep: ${prep}.${weak ? ' Weak: ' + weak : ''}
-Be BRUTALLY HONEST. Output ONLY valid JSON with no trailing commas:
+Be BRUTALLY HONEST. Output ONLY valid JSON:
 {"exam":"${exam}","days_left":${daysLeft},"verdict":"<2 sentence honest assessment>","target":"<realistic score>","alert":"<warning if < 30 days, else empty>","subject_breakdown":[{"subject":"<s>","icon":"<e>","weightage":"40%","topics":[{"topic":"<t>","subtopics":["st1","st2"],"days":"<days>","priority":"high|medium|low"}],"revision_cycles":2,"practice_tests":"<e.g. 3 mocks>"}],"weekly_blocks":[{"week":"Week 1-2","focus":"<topic>","intensity":"light|moderate|intense|brutal","daily":[{"day":"Mon-Tue","plan":"<plan>"},{"day":"Wed-Thu","plan":"<plan>"},{"day":"Fri-Sat","plan":"<plan>"},{"day":"Sun","plan":"Revision + Mock"}]}],"revision_plan":"<2 sentences>","weak_area_focus":"<advice>","tips":["t1","t2","t3"]}
-3-4 subjects, 3-5 weekly blocks. IMPORTANT: Valid JSON only, no trailing commas.`;
-    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Brutally honest exam strategist. Output ONLY valid JSON with no trailing commas.', 1800); renderExamPlan(parseJ(raw)); }
+3-4 subjects, 3-5 weekly blocks.`;
+    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Brutally honest exam strategist. Output ONLY valid JSON.', 1800); renderExamPlan(parseJ(raw)); }
     catch (e) { hide('ep-loading'); document.getElementById('ep-result').innerHTML = `<div class="card" style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`; show('ep-result'); }
 }
 function renderExamPlan(d) {
@@ -590,26 +515,10 @@ async function generateSmart() {
     renderSmSteps(steps, 0);
     try {
         let jda = { role: '', skills: [], tech: [] };
-        try {
-            const jdRaw = await callAI([{ role: 'user', content: `Analyze this JD. Output ONLY JSON with no trailing commas: {"role":"<role>","company":"<company or empty>","skills":["s1","s2","s3","s4","s5"],"tech":["t1","t2","t3"],"level":"<junior/mid/senior>"}\n\nJD: ${jd}` }], 'Output ONLY valid JSON with no trailing commas.', 400);
-            jda = parseJ(jdRaw);
-            show('gen-jd-box');
-            document.getElementById('gen-jd-role').textContent = `Role: ${jda.role || 'Software Developer'}${jda.company ? ' @ ' + jda.company : ''}`;
-            document.getElementById('gen-jd-skills').innerHTML = [...(jda.skills || []), ...(jda.tech || [])].map(s => `<span class="chip chip-a" style="font-size:.56rem">${esc(s)}</span>`).join('');
-        } catch (e) { }
+        try { const jdRaw = await callAI([{ role: 'user', content: `Analyze this JD. Output ONLY JSON: {"role":"<role>","company":"<company or empty>","skills":["s1","s2","s3","s4","s5"],"tech":["t1","t2","t3"],"level":"<junior/mid/senior>"}\n\nJD: ${jd}` }], 'Output ONLY valid JSON.', 400); jda = parseJ(jdRaw); show('gen-jd-box'); document.getElementById('gen-jd-role').textContent = `Role: ${jda.role || 'Software Developer'}${jda.company ? ' @ ' + jda.company : ''}`; document.getElementById('gen-jd-skills').innerHTML = [...(jda.skills || []), ...(jda.tech || [])].map(s => `<span class="chip chip-a" style="font-size:.56rem">${esc(s)}</span>`).join(''); } catch (e) { }
         renderSmSteps(steps, 1);
         let repoSec = '';
-        if (genGH && genGH.repos.length) {
-            const summary = genGH.repos.map(r => `${r.name} (${r.language}): ${r.description} [⭐${r.stars}]`).join('\n');
-            try {
-                const selRaw = await callAI([{ role: 'user', content: `JD/Role: ${jd}\nRequired: ${[...jda.skills, ...jda.tech].join(', ')}\n\nRepos:\n${summary}\n\nSelect 4-6 most relevant. Return ONLY a JSON array: ["repo1","repo2"]` }], 'Output ONLY a valid JSON array with no trailing commas.', 400);
-                const sel = parseJA(selRaw);
-                const selR = genGH.repos.filter(r => sel.includes(r.name)).slice(0, 6);
-                if (selR.length) repoSec = `\n\nAUTO-SELECTED GITHUB PROJECTS:\n${selR.map(r => `• ${r.name} (${r.language}): ${r.description} [⭐${r.stars}]`).join('\n')}`;
-            } catch (e) {
-                repoSec = `\n\nGITHUB PROJECTS:\n${genGH.repos.slice(0, 5).map(r => `• ${r.name} (${r.language}): ${r.description}`).join('\n')}`;
-            }
-        }
+        if (genGH && genGH.repos.length) { const summary = genGH.repos.map(r => `${r.name} (${r.language}): ${r.description} [⭐${r.stars}]`).join('\n'); try { const selRaw = await callAI([{ role: 'user', content: `JD/Role: ${jd}\nRequired: ${[...jda.skills, ...jda.tech].join(', ')}\n\nRepos:\n${summary}\n\nSelect 4-6 most relevant. Return ONLY JSON array: ["repo1","repo2"]` }], 'Output ONLY a JSON array.', 400); const sel = parseJA(selRaw); const selR = genGH.repos.filter(r => sel.includes(r.name)).slice(0, 6); if (selR.length) repoSec = `\n\nAUTO-SELECTED GITHUB PROJECTS:\n${selR.map(r => `• ${r.name} (${r.language}): ${r.description} [⭐${r.stars}]`).join('\n')}`; } catch (e) { repoSec = `\n\nGITHUB PROJECTS:\n${genGH.repos.slice(0, 5).map(r => `• ${r.name} (${r.language}): ${r.description}`).join('\n')}`; } }
         renderSmSteps(steps, 2);
         document.getElementById('gen-ltxt').textContent = 'Generating ATS-optimized resume…';
         const existCtx = genBase ? `\n\nEXISTING RESUME (PRESERVE REAL NAME, DATES, COMPANIES):\n${genBase.slice(0, 3000)}` : '';
@@ -643,19 +552,11 @@ async function generateGHResume() {
         pArea.innerHTML = `<div class="gh-banner"><img class="gh-avatar" src="${profile.avatar_url}" alt="avatar" onerror="this.style.display='none'"><div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:.83rem">${esc(profile.name || profile.login)}</div><div class="text-xs text-w4">@${esc(profile.login)} · ${profile.public_repos} repos · ${profile.followers || 0} followers</div>${profile.bio ? `<div class="text-xs text-w4">${esc(profile.bio)}</div>` : ''}</div></div>`;
         show(pArea); renderGHSteps(steps, 1);
         let jda = { role: 'Software Developer', skills: [], tech: [] };
-        try {
-            const jdRaw = await callAI([{ role: 'user', content: `Extract key info from this JD. Output ONLY JSON with no trailing commas: {"role":"<role>","skills":["s1","s2","s3"],"tech":["t1","t2","t3"]}\n\nJD: ${jd}` }], 'Output ONLY valid JSON with no trailing commas.', 400);
-            jda = parseJ(jdRaw);
-        } catch (e) { }
+        try { const jdRaw = await callAI([{ role: 'user', content: `Extract key info from this JD. Output ONLY JSON: {"role":"<role>","skills":["s1","s2","s3"],"tech":["t1","t2","t3"]}\n\nJD: ${jd}` }], 'Output ONLY valid JSON.', 400); jda = parseJ(jdRaw); } catch (e) { }
         renderGHSteps(steps, 2);
         const rSum = repos.map(r => `${r.name} (${r.language}): ${r.description} [⭐${r.stars}]`).join('\n');
         let selRepos = repos.slice(0, 5);
-        try {
-            const selRaw = await callAI([{ role: 'user', content: `Target role: ${jd}\nRequired: ${[...jda.skills, ...jda.tech].join(', ')}\n\nRepos:\n${rSum}\n\nSelect 5-7 most relevant. Return ONLY a JSON array: ["name1","name2"]` }], 'Output ONLY a valid JSON array with no trailing commas.', 400);
-            const sel = parseJA(selRaw);
-            const matched = repos.filter(r => sel.includes(r.name)).slice(0, 7);
-            if (matched.length) selRepos = matched;
-        } catch (e) { }
+        try { const selRaw = await callAI([{ role: 'user', content: `Target role: ${jd}\nRequired: ${[...jda.skills, ...jda.tech].join(', ')}\n\nRepos:\n${rSum}\n\nSelect 5-7 most relevant. Return ONLY JSON array: ["name1","name2"]` }], 'Output ONLY a JSON array.', 400); const sel = parseJA(selRaw); const matched = repos.filter(r => sel.includes(r.name)).slice(0, 7); if (matched.length) selRepos = matched; } catch (e) { }
         const srEl = document.getElementById('gh-sel-repos');
         srEl.innerHTML = `<div class="text-xs text-w4 mb-sm">🤖 Auto-selected ${selRepos.length} repos:</div>` + selRepos.map(r => `<span class="repo-chip">⭐${r.stars} ${esc(r.name)}</span>`).join('');
         show(srEl); renderGHSteps(steps, 3);
@@ -675,8 +576,8 @@ async function analyzeResume() {
     const role = document.getElementById('target-role').value.trim();
     if (!resume) { alert('Please paste your resume text or upload a PDF first!'); return; }
     hide('res-ph'); hide('res-result'); show('res-loading');
-    const prompt = `Analyze this resume${role ? ' for ' + role + ' role' : ''}${jd ? ', against JD' : ''}.\nRESUME:\n${resume}${jd ? '\nJD:\n' + jd : ''}\nOutput ONLY valid JSON with no trailing commas:\n{"ats_score":72,"verdict":"<1 honest sentence>","strengths":["s1","s2","s3"],"improvements":[{"type":"critical","text":"..."},{"type":"warning","text":"..."},{"type":"tip","text":"..."}],"missing_keywords":["k1","k2","k3","k4","k5"],"quick_wins":["w1","w2","w3"]}`;
-    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Expert ATS resume coach. Output ONLY valid JSON with no trailing commas.'); renderResAna(parseJ(raw)); }
+    const prompt = `Analyze this resume${role ? ' for ' + role + ' role' : ''}${jd ? ', against JD' : ''}.\nRESUME:\n${resume}${jd ? '\nJD:\n' + jd : ''}\nOutput ONLY valid JSON:\n{"ats_score":72,"verdict":"<1 honest sentence>","strengths":["s1","s2","s3"],"improvements":[{"type":"critical","text":"..."},{"type":"warning","text":"..."},{"type":"tip","text":"..."}],"missing_keywords":["k1","k2","k3","k4","k5"],"quick_wins":["w1","w2","w3"]}`;
+    try { const raw = await callAI([{ role: 'user', content: prompt }], 'Expert ATS resume coach. Output ONLY valid JSON.'); renderResAna(parseJ(raw)); }
     catch (e) { hide('res-loading'); show('res-result'); document.getElementById('res-result').innerHTML = `<div style="color:var(--red);font-size:.8rem">⚠️ ${esc(e.message)}</div>`; }
 }
 function renderResAna(d) {
