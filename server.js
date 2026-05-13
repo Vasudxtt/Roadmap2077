@@ -9,6 +9,9 @@ const PORT = process.env.PORT || 3000;
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const GROQ_MODEL   = 'llama-3.1-8b-instant';
 
+// ── In-memory cache for GitHub responses (10 min TTL) ──
+const ghCache = new Map();
+
 app.use(express.json({ limit: '16mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -74,6 +77,19 @@ app.post('/api/github/auto-resume', async (req, res) => {
   try {
     const { username } = req.body;
     if (!username) return res.status(400).json({ error: 'username required' });
+
+    // ── Cache check: return cached result if less than 10 min old ──
+    const cacheKey = username.toLowerCase();
+    const cached = ghCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < 10 * 60 * 1000) {
+      console.log(`[GitHub] Cache hit for @${username}`);
+      return res.json(cached.data);
+    }
+
+    if (!process.env.GITHUB_TOKEN) {
+      console.warn('[GitHub] ⚠️  GITHUB_TOKEN not set — unauthenticated rate limit is 60 req/hr');
+    }
+
     const [profile, repos] = await Promise.all([
       ghFetch(`https://api.github.com/users/${encodeURIComponent(username)}`),
       ghFetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=50`)
@@ -83,8 +99,22 @@ app.post('/api/github/auto-resume', async (req, res) => {
       name: r.name, language: r.language || 'Unknown', stars: r.stargazers_count || 0,
       description: r.description || '', updated: r.updated_at, topics: r.topics || [], url: r.html_url
     }));
-    return res.json({ profile, repos: ownRepos });
-  } catch (err) { return res.status(500).json({ error: err.message }); }
+
+    const result = { profile, repos: ownRepos };
+    // ── Save to cache ──
+    ghCache.set(cacheKey, { ts: Date.now(), data: result });
+
+    return res.json(result);
+  } catch (err) {
+    const msg = err.message || '';
+    if (msg.includes('rate limit') || msg.includes('403') || msg.includes('API rate') || msg.includes('secondary rate')) {
+      return res.status(429).json({
+        error: 'GitHub API rate limit exceeded. To fix: create a free token at https://github.com/settings/tokens (no scopes needed) and add GITHUB_TOKEN=your_token to your .env file, then restart the server.',
+        rateLimited: true
+      });
+    }
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 const AWW_SITES = [
